@@ -1,0 +1,35 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+def props = new Properties()
+file("local.properties").withInputStream { props.load(it) }
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://maven.google.com' }
+        maven { url 'https://plugins.gradle.org/m2/' }
+        maven {
+            url 'https://gotenna.jfrog.io/artifactory/androidartifacts'
+        }
+        maven {
+            url "${artifactory_context_url}/${artifactory_dev_repo_key}"
+            credentials {
+                username =  props.getProperty("artifactory.user")
+                password = props.getProperty("artifactory.password")
+            }
+        }
+    }
+}
+rootProject.name = "radio-sdk-android"
+include ':app'
