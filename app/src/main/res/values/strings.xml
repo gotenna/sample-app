@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">app</string>
+    
+    <!--Home-->
+    <string name="home_title">Scan Radios</string>
+    <string name="type_of_connection_hint">Type of device connection</string>
+    <string name="select_radios_hint">Select your radios</string>
+    <string name="scan_label">Scan</string>
+    <string name="connect_label">Connect</string>
+    <string name="select_by_gid_label">Select by GID</string>
+    <string name="select_by_gid_dialog_title">Enter GID of Other Radio to Send Message to</string>
+    <string name="gid_hint">GID</string>
+    <string name="invalid_gid_warning">Invalid GID</string>
+
+    <!--Image Description-->
+    <string name="checkbox_description">Checkbox</string>
+    <string name="led_blick_action">Led Blink</string>
+    <string name="set_gid_action">Set Private Gid</string>
+    <string name="delete_git_action">Delete Private Gid</string>
+    <string name="set_token_action">Set Sdk Token</string>
+    <string name="set_power_action_1">Set Power and Bandwidth 0.5/4.54</string>
+    <string name="set_power_action_2">Set Power and Bandwidth 1/7.28</string>
+    <string name="get_power_action">Get power and bandwidth</string>
+    <string name="set_frequency_action">Set Frequency channel 149/159</string>
+    <string name="get_frequency_action">Get frequency channels</string>
+    <string name="get_device_info_action">Get Device Info</string>
+
+</resources>

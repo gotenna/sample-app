@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/usbButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="scan + connect usb" />
+
+        <Button
+            android:id="@+id/bleButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="scan + connect ble" />
+
+        <Button
+            android:id="@+id/setGidButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Set Gid" />
+
+        <Button
+            android:id="@+id/deleteGidButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete Gid" />
+
+        <Button
+            android:id="@+id/setSdkToken"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Set sdk token" />
+
+        <Button
+            android:id="@+id/sendEcho"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Led Blink" />
+    </LinearLayout>
+
+</layout>
