@@ -28,7 +28,10 @@ import kotlinx.coroutines.flow.*
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
+@ExperimentalTime
 class HomeViewModel : ViewModel() {
     private val uiScope = viewModelScope
     private val _connectionType = MutableStateFlow(ConnectionType.USB)
@@ -51,15 +54,16 @@ class HomeViewModel : ViewModel() {
                 _radioModels.update { radios }
                 _radios.update { radios.toListItems() }
                 // TODO a stop gap for now to not recreate several jobs each time these are updated
-                radios.forEach { radio ->
-                    logOutput.update { it + "Device: ${radio.serialNumber} gid: ${radio.personalGid}\n\n" }
-                    launch {
-                        radio.observeState().collect { state ->
-                            logOutput.update { it + "New device state is: $state for device: ${radio.serialNumber} ${Date()}\n\n" }
+                if (radios.size > 3) {
+                    radios.forEach { radio ->
+                        logOutput.update { it + "Device: ${radio.serialNumber} gid: ${radio.personalGid}\n\n" }
+                        launch {
+                            radio.observeState().collect { state ->
+                                logOutput.update { it + "New device state is: $state for device: ${radio.serialNumber} ${Date()}\n\n" }
+                            }
                         }
-                    }
-                    launch {
-                        /*launch {
+                        launch {
+                            /*launch {
                         logOutput.update { it + "Starting to run user simulated traffic.\n" }
                         // adding this to simulate some of the behavior the device has by a client
                         while (radio.state == RadioState.CONNECTED) {
@@ -70,51 +74,55 @@ class HomeViewModel : ViewModel() {
                             delay(TimeUnit.SECONDS.toMillis(15))
                         }
                     }*/
-                        radio.receive
-                            .filter {
-                                !(it is RadioResult.Success && it.executedOrNull() is RadioCommand.FailedToParseResponse)
-                            }.collect { command ->
-                                when {
-                                    command.isSuccess() -> {
-                                        when {
-                                            command.executedOrNull() is SendToNetwork.AnyNetworkMessage -> {
-                                                logOutput.update {
-                                                    it + "Incoming command for any message device: ${radio.serialNumber} is success: ${
-                                                        command.executedOrNull()
-                                                    }\n\n"
-                                                }
-                                            }
-                                            command.executedOrNull() is SendToNetwork.GripFile -> {
-                                                logOutput.update {
-                                                    it + "A grip file has been delivered, result: ${(command.executedOrNull() as SendToNetwork.GripFile).gripResult}"
-                                                }
-                                                if ((command.executedOrNull() as SendToNetwork.GripFile).gripResult is GripResult.GripFullData) {
-                                                    gripFile.update { command.executedOrNull() as SendToNetwork.GripFile }
-                                                }
-                                            }
-                                            command.executedOrNull() is SendToRadio.FirmwareUpdate -> {
-                                                when ((command.executedOrNull() as SendToRadio.FirmwareUpdate).firmwareUpdateStatus) {
-                                                    is SendToRadio.FirmwareUpdateState.Started -> {
-                                                        logOutput.update { it + "Firmware update started at: ${Date()} for device ${radio.serialNumber}\n\n" }
-                                                    }
-                                                    is SendToRadio.FirmwareUpdateState.FinalizingUpdate -> {
-                                                        logOutput.update { it + "Firmware update finalizing at: ${Date()} for device ${radio.serialNumber}\n\n" }
-                                                    }
-                                                    is SendToRadio.FirmwareUpdateState.CompletedSuccessfully -> {
-                                                        logOutput.update { it + "Firmware update compelted at: ${Date()} for device ${radio.serialNumber}\n\n" }
+                            radio.receive
+                                .filter {
+                                    !(it is RadioResult.Success && it.executedOrNull() is RadioCommand.FailedToParseResponse)
+                                }.collect { command ->
+                                    when {
+                                        command.isSuccess() -> {
+                                            when {
+                                                command.executedOrNull() is SendToNetwork.AnyNetworkMessage -> {
+                                                    logOutput.update {
+                                                        it + "Incoming command for any message device: ${radio.serialNumber} is success: ${
+                                                            command.executedOrNull()
+                                                        }\n\n"
                                                     }
                                                 }
-                                            }
-                                            else -> {
-                                                logOutput.update { it + "Incoming command for device: ${radio.serialNumber} is success: ${command.executedOrNull()}\n\n" }
+                                                command.executedOrNull() is SendToNetwork.GripFile -> {
+                                                    logOutput.update {
+                                                        it + "A grip file has been delivered, result: ${(command.executedOrNull() as SendToNetwork.GripFile).gripResult}"
+                                                    }
+                                                    if ((command.executedOrNull() as SendToNetwork.GripFile).gripResult is GripResult.GripFullData) {
+                                                        gripFile.update { command.executedOrNull() as SendToNetwork.GripFile }
+                                                    }
+                                                }
+                                                command.executedOrNull() is SendToRadio.FirmwareUpdate -> {
+                                                    when ((command.executedOrNull() as SendToRadio.FirmwareUpdate).firmwareUpdateStatus) {
+                                                        is SendToRadio.FirmwareUpdateState.Started -> {
+//                                                            logOutput.update { it + "Firmware update started at: ${Date()} for device ${radio.serialNumber}\n\n" }
+                                                        }
+                                                        is SendToRadio.FirmwareUpdateState.FinalizingUpdate -> {
+//                                                            logOutput.update { it + "Firmware update finalizing at: ${Date()} for device ${radio.serialNumber}\n\n" }
+                                                        }
+                                                        is SendToRadio.FirmwareUpdateState.CompletedSuccessfully -> {
+//                                                            logOutput.update { it + "Firmware update compelted at: ${Date()} for device ${radio.serialNumber}\n\n" }
+                                                        }
+                                                    }
+                                                }
+                                                command.executedOrNull() is SendToRadio.DeviceInfo -> {
+                                                    // ignore for now
+                                                }
+                                                else -> {
+                                                    logOutput.update { it + "Incoming command for device: ${radio.serialNumber} is success: ${command.executedOrNull()}\n\n" }
+                                                }
                                             }
                                         }
-                                    }
-                                    else -> {
-                                        logOutput.update { it + "Incoming command for device: ${radio.serialNumber} is failure: ${command.getErrorOrNull()} for device ${radio.serialNumber} ${Date()}\n\n" }
+                                        else -> {
+                                            logOutput.update { it + "Incoming command for device: ${radio.serialNumber} is failure: ${command.getErrorOrNull()} for device ${radio.serialNumber} ${Date()}\n\n" }
+                                        }
                                     }
                                 }
-                            }
+                        }
                     }
                 }
             }
@@ -148,9 +156,11 @@ class HomeViewModel : ViewModel() {
         _radios.update { GotennaClient.scan(_connectionType.value).toListItems() }
     }
 
-    fun connectRadios() = uiScope.launch {
+    fun connectRadios() = uiScope.launch(Dispatchers.IO) {
         _radios.value.filter { it.isSelected }.forEach {
-            (it.item as RadioModel).connect()
+            launch {
+                (it.item as RadioModel).connect()
+            }
         }
     }
 
@@ -1313,7 +1323,27 @@ class HomeViewModel : ViewModel() {
     fun installFirmwareFile(fileData: ByteArray, targetFirmwareVersion: GTFirmwareVersion) {
         uiScope.launch(Dispatchers.IO) {
             logOutput.update { it + "got file of size ${fileData.size} target version: $targetFirmwareVersion\n\n" }
-            val tasks = mutableListOf<Deferred<RadioResult<Unit>>>()
+            val serialNumbers = radioModels.value.map { it.serialNumber }.toMutableList()
+            repeat(times = 10) {
+                val time = measureTime {
+                    GotennaClient.bulkUpdateFirmware(fileData, serialNumbers)
+                }
+                logOutput.update { it + "elapsed time for all installs in seconds: ${time.inWholeSeconds}\n\n" }
+                radioModels.value.forEach {
+                    it.getRadioInfo()
+                    it.performLedBlink()
+                }
+            }
+
+            /*bulkUpdate.forEach { t, u ->
+                if (u) {
+                    logOutput.update { it + "update result for device: $t is success timestamp:${Date()}\n\n" }
+                } else {
+                    logOutput.update { it + "update result for device: $t is failure timestamp:${Date()}\n\n" }
+                }
+            }*/
+
+            /*val tasks = mutableListOf<Deferred<RadioResult<Unit>>>()
             radioModels.value.forEach { radio ->
                 tasks.add(
                     async {
@@ -1328,7 +1358,7 @@ class HomeViewModel : ViewModel() {
                     }
                 )
             }
-            tasks.awaitAll()
+            tasks.awaitAll()*/
         }
     }
 
