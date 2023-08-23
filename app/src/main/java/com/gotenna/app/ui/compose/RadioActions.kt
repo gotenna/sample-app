@@ -597,7 +597,7 @@ fun GidAcquiringDialog(dismissAction: () -> Unit, confirmClickAction: (String) -
                         label = R.string.gid_hint,
                         keyboardType = KeyboardType.Number,
                         onValueChange = {
-                            if (it.length <= 14) {
+                            if (it.length <= 15) {
                                 gidString = it
                             }
                         }

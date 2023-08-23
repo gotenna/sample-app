@@ -54,7 +54,7 @@ class HomeViewModel : ViewModel() {
                 _radioModels.update { radios }
                 _radios.update { radios.toListItems() }
                 // TODO a stop gap for now to not recreate several jobs each time these are updated
-                if (radios.size > 3) {
+                if (radios.size > 0) {
                     radios.forEach { radio ->
                         logOutput.update { it + "Device: ${radio.serialNumber} gid: ${radio.personalGid}\n\n" }
                         launch {
@@ -74,9 +74,22 @@ class HomeViewModel : ViewModel() {
                             delay(TimeUnit.SECONDS.toMillis(15))
                         }
                     }*/
-                            radio.receive
-                                .filter {
-                                    !(it is RadioResult.Success && it.executedOrNull() is RadioCommand.FailedToParseResponse)
+                            radio.receive.filter {
+                                    if (it.isSuccess()) {
+                                        when (it.executedOrNull()) {
+                                            is SendToRadio.FirmwareUpdate -> {
+                                                when ((it.executedOrNull() as SendToRadio.FirmwareUpdate).firmwareUpdateStatus) {
+                                                    is SendToRadio.FirmwareUpdateState.InProgress -> {
+                                                        ((it.executedOrNull() as SendToRadio.FirmwareUpdate).firmwareUpdateStatus as SendToRadio.FirmwareUpdateState.InProgress).progressPercent > 0
+                                                    }
+                                                    else -> true
+                                                }
+                                            }
+                                            else -> true
+                                        }
+                                    } else {
+                                        true
+                                    }
                                 }.collect { command ->
                                     when {
                                         command.isSuccess() -> {
@@ -106,6 +119,9 @@ class HomeViewModel : ViewModel() {
                                                         }
                                                         is SendToRadio.FirmwareUpdateState.CompletedSuccessfully -> {
 //                                                            logOutput.update { it + "Firmware update compelted at: ${Date()} for device ${radio.serialNumber}\n\n" }
+                                                        }
+                                                        is SendToRadio.FirmwareUpdateState.InProgress -> {
+                                                            logOutput.update { it + "Firmware update progress ${((command.executedOrNull() as SendToRadio.FirmwareUpdate).firmwareUpdateStatus as SendToRadio.FirmwareUpdateState.InProgress).progressPercent}" }
                                                         }
                                                     }
                                                 }
