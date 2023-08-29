@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gotenna.app.model.ListItem
 import com.gotenna.app.ui.compose.mobyDickText
+import com.gotenna.app.util.isConnected
 import com.gotenna.app.util.replaceItem
 import com.gotenna.app.util.toListItems
+import com.gotenna.app.util.toMutableStateFlow
 import com.gotenna.radio.sdk.GotennaClient
 import com.gotenna.radio.sdk.common.results.*
 import com.gotenna.radio.sdk.common.models.FrequencyBandwidth
@@ -48,6 +50,12 @@ class HomeViewModel : ViewModel() {
     private val _radioModels = MutableStateFlow<List<RadioModel>>(emptyList())
     val radioModels = _radioModels.asStateFlow()
 
+    private val _isSelectAll = _radios.mapLatest { list ->
+        val notConnectedRadios = list.filter { !(it.item as RadioModel).isConnected() }
+        notConnectedRadios.all { it.isSelected }
+    }.toMutableStateFlow(uiScope, false)
+    val isSelectAll = _isSelectAll.asStateFlow()
+
     init {
         uiScope.launch {
             GotennaClient.observeRadios().collect { radios ->
@@ -66,7 +74,7 @@ class HomeViewModel : ViewModel() {
                             /*launch {
                         logOutput.update { it + "Starting to run user simulated traffic.\n" }
                         // adding this to simulate some of the behavior the device has by a client
-                        while (radio.state == RadioState.CONNECTED) {
+                        while (radio.isConnected()) {
                             if (Random().nextBoolean()) {
                                 sendCasevac(false)
                             }
@@ -162,7 +170,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun setSelectedRadio(listItem: ListItem) {
-        if ((listItem.item as RadioModel).state == RadioState.CONNECTED) {
+        if ((listItem.item as RadioModel).isConnected()) {
             selectedRadio.update { listItem.item }
         }
     }
@@ -183,8 +191,21 @@ class HomeViewModel : ViewModel() {
     fun disconnectRadio(listItem: ListItem) = uiScope.launch {
         val radio = listItem.item as RadioModel
 
-        if (radio.state == RadioState.CONNECTED) {
+        if (radio.isConnected()) {
             radio.disconnect()
+        }
+    }
+
+    private fun updateIsSelectAll() = uiScope.launch {
+        _isSelectAll.update {
+            val isChecked = !it
+            val newList = _radios.value.map { listItem ->
+                listItem.copy(isSelected = isChecked)
+            }
+
+            _radios.update { newList }
+
+            isChecked
         }
     }
 
@@ -193,11 +214,13 @@ class HomeViewModel : ViewModel() {
         connectionTypeIndex = connectTypeIndex.collectAsState(initial = 0),
         isConnectAvailable = isConnectAvailable.collectAsState(initial = false),
         radios = radios.collectAsState(),
+        isSelectAll = isSelectAll.collectAsState(),
         connectionTypeChangeAction = { disconnectAllRadiosAndUpdateConnectionType(it) },
         radioClickAction = { updateRadiosOnSectionChange(it) },
         radioLongClickAction = { disconnectRadio(it) },
         connectRadiosAction = { connectRadios() },
-        scanRadiosAction = { scanRadios() }
+        scanRadiosAction = { scanRadios() },
+        selectAllCheckAction = { updateIsSelectAll() }
     )
 
     // TODO these probably go in another viewmodel or need to get the radio from the existing list

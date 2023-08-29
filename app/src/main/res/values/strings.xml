@@ -5,6 +5,7 @@
     <string name="home_title">Scan Radios</string>
     <string name="type_of_connection_hint">Type of device connection</string>
     <string name="select_radios_hint">Select your radios</string>
+    <string name="select_all_label">Select All</string>
     <string name="scan_label">Scan</string>
     <string name="connect_label">Connect</string>
     <string name="select_by_gid_label">Select by GID</string>

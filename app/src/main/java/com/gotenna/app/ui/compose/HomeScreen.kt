@@ -22,9 +22,9 @@ import com.gotenna.app.model.ListItem
 import com.gotenna.app.ui.*
 import com.gotenna.app.ui.theme.*
 import com.gotenna.app.util.clickableWithRipple
+import com.gotenna.app.util.isConnected
 import com.gotenna.radio.sdk.common.models.radio.ConnectionType
 import com.gotenna.radio.sdk.common.models.radio.RadioModel
-import com.gotenna.radio.sdk.common.models.radio.RadioState
 
 @Preview
 @Composable
@@ -65,7 +65,10 @@ fun HomeScreen(
                         it
                     )
                 }
-            }
+            },
+            isShowSelectAllButton = state.radios.value.isNotEmpty() && !state.radios.value.all { (it.item as RadioModel).isConnected() },
+            isSelectAll = state.isSelectAll.value,
+            selectAllCheckAction = { state.selectAllCheckAction?.let { it() } }
         )
 
         RadioList(
@@ -94,7 +97,13 @@ fun HomeScreen(
 }
 
 @Composable
-fun ControlPanel(connectionTypeIndex: Int, connectionTypeChangeActon: (Int) -> Unit) {
+fun ControlPanel(
+    connectionTypeIndex: Int,
+    connectionTypeChangeActon: (Int) -> Unit,
+    isShowSelectAllButton: Boolean,
+    isSelectAll: Boolean,
+    selectAllCheckAction: () -> Unit
+) {
     Column(
         modifier = Modifier.padding(16.dp)
     ) {
@@ -110,7 +119,31 @@ fun ControlPanel(connectionTypeIndex: Int, connectionTypeChangeActon: (Int) -> U
         )
 
         Spacer(modifier = Modifier.height(8.dp))
-        SimpleText(text = R.string.select_radios_hint, color = Gray, fontSize = Small)
+
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                SimpleText(text = R.string.select_radios_hint, color = Gray, fontSize = Small)
+            }
+
+            if (isShowSelectAllButton) {
+                SelectAllButton(isSelectAll, selectAllCheckAction)
+            }
+        }
+    }
+}
+
+@Composable
+fun SelectAllButton(isChecked: Boolean, checkAction: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SimpleText(text = R.string.select_all_label, color = Green, fontSize = Small)
+        Spacer(modifier = Modifier.width(8.dp))
+        SimpleCheckbox(isChecked = isChecked, checkAction = checkAction)
     }
 }
 
@@ -151,7 +184,7 @@ fun RadioItem(
     navigateAction: (ListItem) -> Unit
 ) {
     val radio = listItem.item as RadioModel
-    val isConnected = radio.state == RadioState.CONNECTED
+    val isConnected = radio.isConnected()
 
     Row(
         modifier = Modifier
