@@ -1390,4 +1390,29 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    fun setTetherMode(enabled: Boolean, batteryThreshold: Int) {
+        uiScope.launch {
+            val result = selectedRadio.value?.setTetherMode(enabled, batteryThreshold)
+            val output = if (result?.isSuccess() == true) {
+                "Success set tether returned data is ${result.executedOrNull()}\n\n"
+            } else {
+                "Failure set tether returned data is ${result?.getErrorOrNull()}\n\n"
+            }
+
+            logOutput.update { it + output }
+        }
+    }
+
+    fun getTetherMode() {
+        uiScope.launch {
+            val result = selectedRadio.value?.getTetherMode()
+            val output = if (result?.isSuccess() == true) {
+                "Success get tether returned data is ${result.executedOrNull()}\n\n"
+            } else {
+                "Failure get tether returned data is ${result?.getErrorOrNull()}\n\n"
+            }
+
+            logOutput.update { it + output }
+        }
+    }
 }

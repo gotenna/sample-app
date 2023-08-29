@@ -106,7 +106,9 @@ fun RadioActions(
     onGetDeviceInfo: () -> Unit,
     onGetMCUArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,
-    onSendRelayHealthCheck: () -> Unit
+    onSendRelayHealthCheck: () -> Unit,
+    onGetTetherMode: () -> Unit,
+    onSetTetherMode: (Boolean, Int) -> Unit,
 ) {
     val context = LocalContext.current
     val gid: Long = GIDUtils.generateSerialGid(currentRadioSerial)
@@ -572,6 +574,24 @@ fun RadioActions(
                 onGetDeviceInfo()
             }
         }
+
+        item {
+            DefaultWideButton(text = "Get Tether Mode") {
+                onGetTetherMode()
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Enable Tether Mode") {
+                onSetTetherMode(true, 20)
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Disable Tether Mode") {
+                onSetTetherMode(false, 0)
+            }
+        }
     }
 }
 
@@ -669,6 +689,8 @@ fun RadioActionsPreview() {
         onSendFile = { _, _ -> },
         onGetMCUArch = {},
         onInstallFile = {_, _ -> },
-        onSendRelayHealthCheck = {}
+        onSendRelayHealthCheck = {},
+        onGetTetherMode = {},
+        onSetTetherMode = {_, _ -> },
     )
 }

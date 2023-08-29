@@ -163,7 +163,9 @@ fun DetailScreen(
             viewModel.getMCUArch()
         },
         onInstallFile = viewModel::installFirmwareFile,
-        onSendRelayHealthCheck = viewModel::sendRelayHealthCheck
+        onSendRelayHealthCheck = viewModel::sendRelayHealthCheck,
+        onGetTetherMode = viewModel::getTetherMode,
+        onSetTetherMode = viewModel::setTetherMode,
     )
 }
 
@@ -203,7 +205,9 @@ fun DetailScreen(
     onGetDeviceInfo: () -> Unit,
     onGetMcuArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,
-    onSendRelayHealthCheck: () -> Unit
+    onSendRelayHealthCheck: () -> Unit,
+    onGetTetherMode: () -> Unit,
+    onSetTetherMode: (Boolean, Int) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -282,7 +286,9 @@ fun DetailScreen(
                 onGetMcuArch()
             },
             onInstallFile = onInstallFile,
-            onSendRelayHealthCheck = onSendRelayHealthCheck
+            onSendRelayHealthCheck = onSendRelayHealthCheck,
+            onGetTetherMode = onGetTetherMode,
+            onSetTetherMode = onSetTetherMode,
         )
 
     }
@@ -326,6 +332,8 @@ fun DetailScreenPreview() {
         onGetDeviceInfo = { },
         onGetMcuArch = {},
         onInstallFile = {_, _ -> },
-        onSendRelayHealthCheck = {}
+        onSendRelayHealthCheck = {},
+        onGetTetherMode = {},
+        onSetTetherMode = {_, _ -> },
     )
 }
