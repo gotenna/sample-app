@@ -6,10 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gotenna.app.model.ListItem
 import com.gotenna.app.ui.compose.mobyDickText
-import com.gotenna.app.util.isConnected
-import com.gotenna.app.util.replaceItem
-import com.gotenna.app.util.toListItems
-import com.gotenna.app.util.toMutableStateFlow
+import com.gotenna.app.util.*
 import com.gotenna.radio.sdk.GotennaClient
 import com.gotenna.radio.sdk.common.results.*
 import com.gotenna.radio.sdk.common.models.FrequencyBandwidth
@@ -42,6 +39,12 @@ class HomeViewModel : ViewModel() {
 
     val connectTypeIndex = _connectionType.mapLatest { it.ordinal }
     val isConnectAvailable = _radios.mapLatest { list -> list.any { it.isSelected } }
+    val scannedRadiosCount = _radios.mapLatest { list ->
+        list.count { (it.item as RadioModel).isScannedOrDisconnected() }
+    }
+    val connectedRadiosCount = _radios.mapLatest { list ->
+        list.count { (it.item as RadioModel).isConnected() }
+    }
 
     val radios = _radios.asStateFlow()
     val selectedRadio = MutableStateFlow<RadioModel?>(null)
@@ -220,7 +223,9 @@ class HomeViewModel : ViewModel() {
         radioLongClickAction = { disconnectRadio(it) },
         connectRadiosAction = { connectRadios() },
         scanRadiosAction = { scanRadios() },
-        selectAllCheckAction = { updateIsSelectAll() }
+        selectAllCheckAction = { updateIsSelectAll() },
+        scannedRadiosCount = scannedRadiosCount.collectAsState(initial = 0),
+        connectedRadiosCount = connectedRadiosCount.collectAsState(initial = 0)
     )
 
     // TODO these probably go in another viewmodel or need to get the radio from the existing list

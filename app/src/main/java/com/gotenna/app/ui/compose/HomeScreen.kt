@@ -12,6 +12,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -68,7 +69,9 @@ fun HomeScreen(
             },
             isShowSelectAllButton = state.radios.value.isNotEmpty() && !state.radios.value.all { (it.item as RadioModel).isConnected() },
             isSelectAll = state.isSelectAll.value,
-            selectAllCheckAction = { state.selectAllCheckAction?.let { it() } }
+            selectAllCheckAction = { state.selectAllCheckAction?.let { it() } },
+            scannedRadiosCount = state.scannedRadiosCount.value,
+            connectedRadiosCount = state.connectedRadiosCount.value
         )
 
         RadioList(
@@ -102,7 +105,9 @@ fun ControlPanel(
     connectionTypeChangeActon: (Int) -> Unit,
     isShowSelectAllButton: Boolean,
     isSelectAll: Boolean,
-    selectAllCheckAction: () -> Unit
+    selectAllCheckAction: () -> Unit,
+    scannedRadiosCount: Int,
+    connectedRadiosCount: Int
 ) {
     Column(
         modifier = Modifier.padding(16.dp)
@@ -123,10 +128,21 @@ fun ControlPanel(
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Box(
+            Column(
                 modifier = Modifier.weight(1f)
             ) {
                 SimpleText(text = R.string.select_radios_hint, color = Gray, fontSize = Small)
+
+                if (scannedRadiosCount != 0 || connectedRadiosCount != 0) {
+                    SimpleText(
+                        text = stringResource(
+                            id = R.string.scanned_and_connected_radios_count_text,
+                            formatArgs = arrayOf(scannedRadiosCount, connectedRadiosCount)
+                        ),
+                        color = Green,
+                        fontSize = Small
+                    )
+                }
             }
 
             if (isShowSelectAllButton) {

@@ -14,5 +14,7 @@ data class HomeState(
     val radioLongClickAction: ((ListItem) -> Unit)? = null,
     val connectRadiosAction: (() -> Unit)? = null,
     val scanRadiosAction: (() -> Unit)? = null,
-    val selectAllCheckAction: (() -> Unit)? = null
+    val selectAllCheckAction: (() -> Unit)? = null,
+    val scannedRadiosCount: State<Int> = mutableStateOf(0),
+    val connectedRadiosCount: State<Int> = mutableStateOf(0)
 )
