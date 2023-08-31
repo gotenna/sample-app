@@ -583,7 +583,7 @@ class HomeViewModel : ViewModel() {
             val result = selectedRadio.value?.send(
                 SendToRadio.ChannelScan(
                     scanBand = RssiScanResult.ScanBand.UHF,
-                    scanWidth = RssiScanResult.ScanWidth.TWO_HUNDRED_FIFTY_kHZ,
+                    scanWidth = RssiScanResult.ScanWidth.CURRENT_FREQ_SET,
                 )
             )
             val output = if (result?.isSuccess() == true) {
