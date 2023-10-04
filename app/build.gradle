@@ -23,6 +23,7 @@ android {
         buildConfigField "String", "SDK_TOKEN", "\""+sdkToken()+"\""
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        missingDimensionStrategy 'version', 'internal'
     }
 
 

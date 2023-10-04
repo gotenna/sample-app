@@ -1,5 +1,6 @@
 package com.gotenna.app.home
 
+import RelayHealthCheckRequest
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
@@ -8,9 +9,8 @@ import com.gotenna.app.model.ListItem
 import com.gotenna.app.ui.compose.mobyDickText
 import com.gotenna.app.util.*
 import com.gotenna.radio.sdk.GotennaClient
+import com.gotenna.radio.sdk.common.models.*
 import com.gotenna.radio.sdk.common.results.*
-import com.gotenna.radio.sdk.common.models.FrequencyBandwidth
-import com.gotenna.radio.sdk.common.models.PowerLevel
 import com.gotenna.radio.sdk.common.models.radio.*
 import com.gotenna.radio.sdk.common.results.GripResult
 import com.gotenna.radio.sdk.legacy.modules.messaging.atak.wrapper.GMGroupMember
@@ -114,7 +114,7 @@ class HomeViewModel : ViewModel() {
                                                 }
                                                 command.executedOrNull() is SendToNetwork.GripFile -> {
                                                     logOutput.update {
-                                                        it + "A grip file has been delivered, result: ${(command.executedOrNull() as SendToNetwork.GripFile).gripResult}"
+                                                        it + "A grip file has been delivered, result: ${(command.executedOrNull() as SendToNetwork.GripFile).gripResult}\n\n"
                                                     }
                                                     if ((command.executedOrNull() as SendToNetwork.GripFile).gripResult is GripResult.GripFullData) {
                                                         gripFile.update { command.executedOrNull() as SendToNetwork.GripFile }
@@ -132,7 +132,7 @@ class HomeViewModel : ViewModel() {
 //                                                            logOutput.update { it + "Firmware update compelted at: ${Date()} for device ${radio.serialNumber}\n\n" }
                                                         }
                                                         is SendToRadio.FirmwareUpdateState.InProgress -> {
-                                                            logOutput.update { it + "Firmware update progress ${((command.executedOrNull() as SendToRadio.FirmwareUpdate).firmwareUpdateStatus as SendToRadio.FirmwareUpdateState.InProgress).progressPercent}" }
+                                                            logOutput.update { it + "Firmware update progress ${((command.executedOrNull() as SendToRadio.FirmwareUpdate).firmwareUpdateStatus as SendToRadio.FirmwareUpdateState.InProgress).progressPercent}\n" }
                                                         }
                                                     }
                                                 }
@@ -369,27 +369,24 @@ class HomeViewModel : ViewModel() {
                 commandMetaData = CommandMetaData(
                     messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                     destinationGid = gidNumber.toLong(),
-                    useGripProtocol = false
+                    senderGid = selectedRadio.value?.personalGid ?: 0
                 ),
                 commandHeader = GotennaHeaderWrapper(
                     uuid = UUID.randomUUID().toString(),
-                    senderGid = radio?.personalGid ?: 1234,
+                    senderGid = selectedRadio.value?.personalGid ?: 1234,
                     senderCallsign = "Test",
                     messageTypeWrapper = MessageTypeWrapper.LOCATION,
                     appCode = 123,
                     senderUUID = "ANDROID-253d2e0c5acb0ef5",
                     recipientUUID = UUID.randomUUID().toString(),
-                    encryptionParameters = EncryptionParameters(
-                        "abcd",
-                        byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-                    )
+                    encryptionParameters = null
                 ),
             )
-            val byteData = Integer.valueOf(data.bytes.copyOfRange(3, 4).toHexString(), 16)
+//            val byteData = Integer.valueOf(data.bytes.copyOfRange(3, 4).toHexString(), 16)
 
-            logOutput.update { it + "sending location object with sequence number of: $byteData\n" }
+//            logOutput.update { it + "sending location object with sequence number of: $byteData\n" }
 
-            val result = radio?.send(
+            val result = selectedRadio.value?.send(
                 data
             )
 
@@ -420,7 +417,6 @@ class HomeViewModel : ViewModel() {
                             commandMetaData = CommandMetaData(
                                 messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                                 destinationGid = gidNumber.toLong(),
-                                useGripProtocol = true,
                                 senderGid = selectedRadio.value?.personalGid ?: 0
                             ), commandHeader = GotennaHeaderWrapper(
                                 uuid = UUID.randomUUID().toString(),
@@ -454,7 +450,6 @@ class HomeViewModel : ViewModel() {
                                 commandMetaData = CommandMetaData(
                                     messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                                     destinationGid = gidNumber.toLong(),
-                                    useGripProtocol = true,
                                     senderGid = selectedRadio.value?.personalGid ?: 0
                                 ), commandHeader = GotennaHeaderWrapper(
                                     uuid = UUID.randomUUID().toString(),
@@ -486,7 +481,6 @@ class HomeViewModel : ViewModel() {
                                 commandMetaData = CommandMetaData(
                                     messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                                     destinationGid = gidNumber.toLong(),
-                                    useGripProtocol = true,
                                     senderGid = selectedRadio.value?.personalGid ?: 0
                                 ), commandHeader = GotennaHeaderWrapper(
                                     uuid = UUID.randomUUID().toString(),
@@ -518,7 +512,6 @@ class HomeViewModel : ViewModel() {
                                 commandMetaData = CommandMetaData(
                                     messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                                     destinationGid = gidNumber.toLong(),
-                                    useGripProtocol = true,
                                     senderGid = selectedRadio.value?.personalGid ?: 0
                                 ), commandHeader = GotennaHeaderWrapper(
                                     uuid = UUID.randomUUID().toString(),
@@ -550,7 +543,6 @@ class HomeViewModel : ViewModel() {
                                 commandMetaData = CommandMetaData(
                                     messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                                     destinationGid = gidNumber.toLong(),
-                                    useGripProtocol = true,
                                     senderGid = selectedRadio.value?.personalGid ?: 0
                                 ), commandHeader = GotennaHeaderWrapper(
                                     uuid = UUID.randomUUID().toString(),
@@ -581,7 +573,7 @@ class HomeViewModel : ViewModel() {
     fun scanChannels() {
         uiScope.launch {
             val result = selectedRadio.value?.send(
-                SendToRadio.ChannelScan(
+                ChannelScan(
                     scanBand = RssiScanResult.ScanBand.UHF,
                     scanWidth = RssiScanResult.ScanWidth.CURRENT_FREQ_SET,
                 )
@@ -599,7 +591,7 @@ class HomeViewModel : ViewModel() {
     fun getChannelData() {
         uiScope.launch {
             val result = selectedRadio.value?.send(
-                SendToRadio.GetChannelData()
+                GetChannelData()
             )
             val output = if (result?.isSuccess() == true) {
                 "Success channel data is ${result.executedOrNull()}\n\n"
@@ -614,7 +606,7 @@ class HomeViewModel : ViewModel() {
     fun sendDnop(privateMessage: Boolean, gidNumber: String = "0") {
         uiScope.launch {
             val result = selectedRadio.value?.send(
-                SendToNetwork.Dnop(
+                Dnop(
                     batteryCharge = 50,
                     isCharging = false,
                     rssiLevels = if (privateMessage) mapOf(
@@ -628,7 +620,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0
                     ), commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
                         senderGid = 1234,
@@ -665,7 +657,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0
                     ), commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
                         senderGid = selectedRadio.value?.personalGid ?: 0,
@@ -703,7 +695,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0
                     ), commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
                         senderGid = 1234,
@@ -730,7 +722,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -861,7 +853,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -915,7 +907,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -962,7 +954,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -1010,7 +1002,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -1046,7 +1038,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -1089,7 +1081,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -1142,7 +1134,6 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = true,
                         senderGid = selectedRadio.value?.personalGid ?: 123
                     ),
                     commandHeader = GotennaHeaderWrapper(
@@ -1213,7 +1204,7 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = false
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
                     ),
                     commandHeader = GotennaHeaderWrapper(
                         uuid = UUID.randomUUID().toString(),
@@ -1312,7 +1303,6 @@ class HomeViewModel : ViewModel() {
                     commandMetaData = CommandMetaData(
                         messageType = GTMessageType.PRIVATE,
                         destinationGid = gidNumber.toLong(),
-                        useGripProtocol = true,
                         senderGid = selectedRadio.value?.personalGid ?: 1234
                     ),
                     commandHeader = GotennaHeaderWrapper(
@@ -1367,48 +1357,17 @@ class HomeViewModel : ViewModel() {
     fun installFirmwareFile(fileData: ByteArray, targetFirmwareVersion: GTFirmwareVersion) {
         uiScope.launch(Dispatchers.IO) {
             logOutput.update { it + "got file of size ${fileData.size} target version: $targetFirmwareVersion\n\n" }
-            val serialNumbers = radioModels.value.map { it.serialNumber }.toMutableList()
-            repeat(times = 10) {
-                val time = measureTime {
-                    GotennaClient.bulkUpdateFirmware(fileData, serialNumbers)
-                }
-                logOutput.update { it + "elapsed time for all installs in seconds: ${time.inWholeSeconds}\n\n" }
-                radioModels.value.forEach {
-                    it.getRadioInfo()
-                    it.performLedBlink()
-                }
-            }
-
-            /*bulkUpdate.forEach { t, u ->
-                if (u) {
-                    logOutput.update { it + "update result for device: $t is success timestamp:${Date()}\n\n" }
-                } else {
-                    logOutput.update { it + "update result for device: $t is failure timestamp:${Date()}\n\n" }
-                }
+            val update = selectedRadio.value?.updateFirmware(firmwareFile = fileData, targetFirmware = GTFirmwareVersion(1, 1, 1))
+            logOutput.update { it + update }
+            /*val time = measureTime {
+                GotennaClient.bulkUpdateFirmware(fileData, serialNumbers)
             }*/
-
-            /*val tasks = mutableListOf<Deferred<RadioResult<Unit>>>()
-            radioModels.value.forEach { radio ->
-                tasks.add(
-                    async {
-                        logOutput.update { it + "Starting update for radio: ${radio.serialNumber}\n" }
-                        val result = radio.updateFirmware(fileData, targetFirmwareVersion)
-                        if (result?.isSuccess() == true) {
-                            logOutput.update { it + "update result for radio: ${radio.serialNumber} is success timestamp:${Date()} ${result.executedOrNull()}\n\n" }
-                        } else {
-                            logOutput.update { it + "update result radio: ${radio.serialNumber}  is failure timestamp:${Date()} ${result?.getErrorOrNull()}\nn" }
-                        }
-                        result
-                    }
-                )
-            }
-            tasks.awaitAll()*/
         }
     }
 
     fun sendRelayHealthCheck() {
         uiScope.launch {
-            val result = selectedRadio.value?.send(SendToRadio.RelayHealthCheckRequest())
+            val result = selectedRadio.value?.send(RelayHealthCheckRequest())
             val output = if (result?.isSuccess() == true) {
                 "Success send relay health check returned data is ${result.executedOrNull()}\n\n"
             } else {
