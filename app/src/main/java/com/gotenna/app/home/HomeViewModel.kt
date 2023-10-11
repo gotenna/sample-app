@@ -1,6 +1,5 @@
 package com.gotenna.app.home
 
-import RelayHealthCheckRequest
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
@@ -571,73 +570,15 @@ class HomeViewModel : ViewModel() {
     }
 
     fun scanChannels() {
-        uiScope.launch {
-            val result = selectedRadio.value?.send(
-                ChannelScan(
-                    scanBand = RssiScanResult.ScanBand.UHF,
-                    scanWidth = RssiScanResult.ScanWidth.CURRENT_FREQ_SET,
-                )
-            )
-            val output = if (result?.isSuccess() == true) {
-                "Success do channel scan data is ${result.executedOrNull()}\n\n"
-            } else {
-                "Failure do channel scan data is ${result?.getErrorOrNull()}\n\n"
-            }
 
-            logOutput.update { it + output }
-        }
     }
 
     fun getChannelData() {
-        uiScope.launch {
-            val result = selectedRadio.value?.send(
-                GetChannelData()
-            )
-            val output = if (result?.isSuccess() == true) {
-                "Success channel data is ${result.executedOrNull()}\n\n"
-            } else {
-                "Failure channel data is ${result?.getErrorOrNull()}\n\n"
-            }
 
-            logOutput.update { it + output }
-        }
     }
 
     fun sendDnop(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
-            val result = selectedRadio.value?.send(
-                Dnop(
-                    batteryCharge = 50,
-                    isCharging = false,
-                    rssiLevels = if (privateMessage) mapOf(
-                        1234 to -12,
-                        4567 to -50,
-                        8901 to -100
-                    ) else emptyMap(),
-                    rssiLevelString = if (!privateMessage) ";1234:-12d;4567:-50d;8901:-100d" else "",
-                    pliSent = 12,
-                    pliReceived = 100,
-                    commandMetaData = CommandMetaData(
-                        messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
-                        destinationGid = gidNumber.toLong(),
-                        senderGid = selectedRadio.value?.personalGid ?: 0
-                    ), commandHeader = GotennaHeaderWrapper(
-                        uuid = UUID.randomUUID().toString(),
-                        senderGid = 1234,
-                        senderCallsign = "Test",
-                        messageTypeWrapper = MessageTypeWrapper.DNOP,
-                        appCode = 123,
-                    )
-                )
-            )
-            val output = if (result?.isSuccess() == true) {
-                "Success send dnop returned data is ${result.executedOrNull()}\n\n"
-            } else {
-                "Failure send dnop returned data is ${result?.getErrorOrNull()}\n\n"
-            }
 
-            logOutput.update { it + output }
-        }
     }
 
     fun sendFrontHaul(privateMessage: Boolean, gidNumber: String = "0") {
@@ -1366,15 +1307,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendRelayHealthCheck() {
-        uiScope.launch {
-            val result = selectedRadio.value?.send(RelayHealthCheckRequest())
-            val output = if (result?.isSuccess() == true) {
-                "Success send relay health check returned data is ${result.executedOrNull()}\n\n"
-            } else {
-                "Failure send relay health check returned data is ${result?.getErrorOrNull()}\n\n"
-            }
-            logOutput.update { it + output }
-        }
+
     }
 
     fun setTetherMode(enabled: Boolean, batteryThreshold: Int) {
