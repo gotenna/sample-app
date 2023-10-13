@@ -31,7 +31,7 @@ class HomeViewModel : ViewModel() {
     private val _connectionType = MutableStateFlow(ConnectionType.USB)
     private val _radios = MutableStateFlow<List<ListItem>>(emptyList())
     // For UI logging.
-    // T5
+    // T6
     val logOutput = MutableStateFlow("Start of logs:\n\n")
 
     val connectTypeIndex = _connectionType.mapLatest { it.ordinal }
