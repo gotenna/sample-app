@@ -1,4 +1,4 @@
-package com.gotenna.app
+package com.gotenna.app.home
 
 import com.gotenna.app.home.HomeViewModel
 
