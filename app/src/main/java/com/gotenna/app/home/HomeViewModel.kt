@@ -183,7 +183,7 @@ class HomeViewModel : ViewModel() {
 
     fun connectRadios() = viewModelScope.launch(Dispatchers.IO) {
         _radios.value.filter { it.isSelected }.forEach {
-            viewModelScope {
+            launch {
                 (it.item as RadioModel).connect()
             }
         }
