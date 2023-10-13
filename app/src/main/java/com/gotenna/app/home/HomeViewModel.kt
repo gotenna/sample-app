@@ -18,16 +18,13 @@ import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
 import com.gotenna.radio.sdk.legacy.sdk.session.messages.GTMessageType
-import com.gotenna.radio.sdk.legacy.sdk.transport.responses.RssiScanResult
 import com.gotenna.radio.sdk.common.utils.GIDUtils
-import com.gotenna.radio.sdk.common.utils.toHexString
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 @ExperimentalTime
 class HomeViewModel : ViewModel() {
@@ -114,6 +111,9 @@ class HomeViewModel : ViewModel() {
                                                 command.executedOrNull() is SendToNetwork.GripFile -> {
                                                     logOutput.update {
                                                         it + "A grip file has been delivered, result: ${(command.executedOrNull() as SendToNetwork.GripFile).gripResult}\n\n"
+                                                    }
+                                                    logOutput.update {
+                                                        it + "Grip delivered metadata is: ${(command.executedOrNull() as SendToNetwork.GripFile).commandMetaData}\n\n"
                                                     }
                                                     if ((command.executedOrNull() as SendToNetwork.GripFile).gripResult is GripResult.GripFullData) {
                                                         gripFile.update { command.executedOrNull() as SendToNetwork.GripFile }
@@ -567,18 +567,6 @@ class HomeViewModel : ViewModel() {
                     })
             }
         }
-    }
-
-    fun scanChannels() {
-
-    }
-
-    fun getChannelData() {
-
-    }
-
-    fun sendDnop(privateMessage: Boolean, gidNumber: String = "0") {
-
     }
 
     fun sendFrontHaul(privateMessage: Boolean, gidNumber: String = "0") {
@@ -1304,10 +1292,6 @@ class HomeViewModel : ViewModel() {
                 GotennaClient.bulkUpdateFirmware(fileData, serialNumbers)
             }*/
         }
-    }
-
-    fun sendRelayHealthCheck() {
-
     }
 
     fun setTetherMode(enabled: Boolean, batteryThreshold: Int) {
