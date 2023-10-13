@@ -1,7 +1,5 @@
 package com.gotenna.app.home
 
-import com.gotenna.app.home.HomeViewModel
-
 fun HomeViewModel.scanChannels() {
     // Not supported
     throw NotImplementedError("Not supported")
