@@ -33,17 +33,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    flavorDimensions "version"
-    productFlavors {
-        internal {
-            // a flavor intended to be used by the gotenna teams to release to gotenna applications
-            dimension "version"
-        }
-        external {
-            // a flavor intended to limit access to some radio features for 3rd party devs
-            dimension "version"
-        }
-    }
+
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
