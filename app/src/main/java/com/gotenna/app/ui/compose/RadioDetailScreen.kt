@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gotenna.app.home.HomeViewModel
+import com.gotenna.app.home.*
 import com.gotenna.app.ui.SimpleTopAppBar
 import com.gotenna.app.ui.theme.Black
 import com.gotenna.app.ui.theme.Gray
