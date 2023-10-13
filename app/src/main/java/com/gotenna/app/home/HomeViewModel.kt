@@ -28,7 +28,6 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class HomeViewModel : ViewModel() {
-    private val uiScope = viewModelScope
     private val _connectionType = MutableStateFlow(ConnectionType.USB)
     private val _radios = MutableStateFlow<List<ListItem>>(emptyList())
     val logOutput = MutableStateFlow("Start of logs:\n\n")
@@ -52,16 +51,16 @@ class HomeViewModel : ViewModel() {
     private val _isSelectAll = _radios.mapLatest { list ->
         val notConnectedRadios = list.filter { !(it.item as RadioModel).isConnected() }
         notConnectedRadios.all { it.isSelected }
-    }.toMutableStateFlow(uiScope, false)
+    }.toMutableStateFlow(viewModelScope, false)
     val isSelectAll = _isSelectAll.asStateFlow()
 
     init {
-        uiScope.launch {
+        viewModelScope.launch {
             GotennaClient.observeRadios().collect { radios ->
                 _radioModels.update { radios }
                 _radios.update { radios.toListItems() }
                 // TODO a stop gap for now to not recreate several jobs each time these are updated
-                if (radios.size > 0) {
+                if (radios.isNotEmpty()) {
                     radios.forEach { radio ->
                         logOutput.update { it + "Device: ${radio.serialNumber} gid: ${radio.personalGid}\n\n" }
                         launch {
@@ -177,20 +176,20 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun scanRadios() = uiScope.launch {
+    fun scanRadios() = viewModelScope.launch {
         _radios.value.forEach { disconnectRadio(it) }
         _radios.update { GotennaClient.scan(_connectionType.value).toListItems() }
     }
 
-    fun connectRadios() = uiScope.launch(Dispatchers.IO) {
+    fun connectRadios() = viewModelScope.launch(Dispatchers.IO) {
         _radios.value.filter { it.isSelected }.forEach {
-            launch {
+            viewModelScope {
                 (it.item as RadioModel).connect()
             }
         }
     }
 
-    fun disconnectRadio(listItem: ListItem) = uiScope.launch {
+    fun disconnectRadio(listItem: ListItem) = viewModelScope.launch {
         val radio = listItem.item as RadioModel
 
         if (radio.isConnected()) {
@@ -198,7 +197,7 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    private fun updateIsSelectAll() = uiScope.launch {
+    private fun updateIsSelectAll() = viewModelScope.launch {
         _isSelectAll.update {
             val isChecked = !it
             val newList = _radios.value.map { listItem ->
@@ -230,7 +229,7 @@ class HomeViewModel : ViewModel() {
     // TODO these probably go in another viewmodel or need to get the radio from the existing list
 
     fun setSdkToken(tokenValue: String) {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.setSdkToken(tokenValue)
             val output = if (result?.isSuccess() == true) {
                 "Success set sdk token returned data is ${result.executedOrNull()}\n\n"
@@ -243,7 +242,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun setGid(gid: Long, type: GidType) {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.setGid(gid, type)
             val output = if (result?.isSuccess() == true) {
                 "Success set gid returned data is ${result.executedOrNull()}\n\n"
@@ -256,7 +255,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun deleteGid(gid: Long, type: GidType) {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.deleteGid(gid, type)
             val output = if (result?.isSuccess() == true) {
                 "Success delete gid returned data is ${result.executedOrNull()}\n\n"
@@ -269,7 +268,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun setPowerAndBandwidth(power: GTPowerLevel, bandwidth: GTBandwidth) {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.setPowerAndBandwidth(power, bandwidth)
             val output = if (result?.isSuccess() == true) {
                 "Success set power/bandwidth returned data is ${result.executedOrNull()}\n\n"
@@ -282,7 +281,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun getPowerAndBandwidth() {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.getPowerAndBandwidth()
             val output = if (result?.isSuccess() == true) {
                 "Success get power/bandwidth returned data is ${result.executedOrNull()}\n\n"
@@ -295,7 +294,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun getDeviceInfo() {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.getLatestRadioInfo()
             val output = if (result?.isSuccess() == true) {
                 "Success get device info returned data is ${result.executedOrNull()}\n\n"
@@ -308,7 +307,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun performLedBlink() {
-        uiScope.launch {
+        viewModelScope.launch {
             val tasks = mutableListOf<Deferred<RadioResult<SendToRadio.PerformLedBlink>>>()
             radioModels.value.forEach {
                 tasks.add(
@@ -329,7 +328,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun setFrequencyChannels(channels: List<GTFrequencyChannel>) {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.setFrequencyChannels(channels)
             val output = if (result?.isSuccess() == true) {
                 "Success set frequency returned data is ${result.executedOrNull()}\n\n"
@@ -342,7 +341,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun getFrequencyChannels() {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.getFrequencyChannels()
             val output = if (result?.isSuccess() == true) {
                 "Success get frequency returned data is ${result.executedOrNull()}\n\n"
@@ -355,7 +354,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendLocation(privateMessage: Boolean, gidNumber: String = "0", radio: RadioModel? = null) {
-        uiScope.launch {
+        viewModelScope.launch {
             val data = SendToNetwork.Location(
                 how = "m-g",
                 staleTime = 300,
@@ -406,7 +405,7 @@ class HomeViewModel : ViewModel() {
      * radioresult.failure.
      */
     fun sendAnyMessage(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             coroutineScope {
                 awaitAll(async {
                     val testMessage = "Test".toByteArray(Charset.defaultCharset())
@@ -574,7 +573,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendGroup(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 SendToNetwork.Group(
                     groupGid = GIDUtils.generateRandomizedPersonalGID(),
@@ -607,7 +606,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendFrequency(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 SendToNetwork.SharedFrequency(
                     uuid = UUID.randomUUID().toString(),
@@ -645,7 +644,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendEncryptionKeyExchange(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 SendToNetwork.EncryptionKeyExchangeData(
                     commandMetaData = CommandMetaData(
@@ -776,7 +775,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendRoute(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 MapObject(
                     commandMetaData = CommandMetaData(
@@ -830,7 +829,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendCircle(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 MapObject(
                     commandMetaData = CommandMetaData(
@@ -877,7 +876,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendShape(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 MapObject(
                     commandMetaData = CommandMetaData(
@@ -925,7 +924,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendChat(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 SendToNetwork.ChatMessage(
                     commandMetaData = CommandMetaData(
@@ -961,7 +960,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendMapItem(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 MapObject(
                     commandMetaData = CommandMetaData(
@@ -1004,7 +1003,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendVehicle(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 MapObject(
                     commandMetaData = CommandMetaData(
@@ -1057,7 +1056,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendCasevac(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 MapObject(
                     commandMetaData = CommandMetaData(
@@ -1127,7 +1126,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun send9Line(privateMessage: Boolean, gidNumber: String = "0") {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(
                 MapObject(
                     commandMetaData = CommandMetaData(
@@ -1217,7 +1216,7 @@ class HomeViewModel : ViewModel() {
         if (gidNumber.isBlank()) {
             return
         }
-        uiScope.launch {
+        viewModelScope.launch {
             gripFile.update { null }
             val inputStream = file.inputStream()
             val content = ByteArray(file.length().toInt())
@@ -1254,7 +1253,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun setNetworkMacMode(networkMacMode: Int, backPressure: Int, backOffMethod: Int) {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.setNetworkMacMode(
                 networkMacMode = networkMacMode,
                 backPressure = backPressure,
@@ -1271,7 +1270,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun getMCUArch() {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.send(SendToRadio.RadioChipArchitecture())
             val output = if (result?.isSuccess() == true) {
                 "Success get mcu architecture returned data is ${result.executedOrNull()}\n\n"
@@ -1284,7 +1283,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun installFirmwareFile(fileData: ByteArray, targetFirmwareVersion: GTFirmwareVersion) {
-        uiScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             logOutput.update { it + "got file of size ${fileData.size} target version: $targetFirmwareVersion\n\n" }
             val update = selectedRadio.value?.updateFirmware(firmwareFile = fileData, targetFirmware = GTFirmwareVersion(1, 1, 1))
             logOutput.update { it + update }
@@ -1295,7 +1294,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun setTetherMode(enabled: Boolean, batteryThreshold: Int) {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.setTetherMode(enabled, batteryThreshold)
             val output = if (result?.isSuccess() == true) {
                 "Success set tether returned data is ${result.executedOrNull()}\n\n"
@@ -1308,7 +1307,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun getTetherMode() {
-        uiScope.launch {
+        viewModelScope.launch {
             val result = selectedRadio.value?.getTetherMode()
             val output = if (result?.isSuccess() == true) {
                 "Success get tether returned data is ${result.executedOrNull()}\n\n"
