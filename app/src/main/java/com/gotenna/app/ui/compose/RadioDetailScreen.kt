@@ -166,6 +166,9 @@ fun DetailScreen(
         onSendRelayHealthCheck = viewModel::sendRelayHealthCheck,
         onGetTetherMode = viewModel::getTetherMode,
         onSetTetherMode = viewModel::setTetherMode,
+        onSetTargetGid = {
+            viewModel.gidNumber = it
+        }
     )
 }
 
@@ -208,6 +211,7 @@ fun DetailScreen(
     onSendRelayHealthCheck: () -> Unit,
     onGetTetherMode: () -> Unit,
     onSetTetherMode: (Boolean, Int) -> Unit,
+    onSetTargetGid: (Long) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -289,6 +293,7 @@ fun DetailScreen(
             onSendRelayHealthCheck = onSendRelayHealthCheck,
             onGetTetherMode = onGetTetherMode,
             onSetTetherMode = onSetTetherMode,
+            onSetTargetGid = onSetTargetGid
         )
 
     }
@@ -335,5 +340,6 @@ fun DetailScreenPreview() {
         onSendRelayHealthCheck = {},
         onGetTetherMode = {},
         onSetTetherMode = {_, _ -> },
+        onSetTargetGid = {}
     )
 }

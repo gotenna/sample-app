@@ -109,6 +109,7 @@ fun RadioActions(
     onSendRelayHealthCheck: () -> Unit,
     onGetTetherMode: () -> Unit,
     onSetTetherMode: (Boolean, Int) -> Unit,
+    onSetTargetGid: (Long) -> Unit
 ) {
     val context = LocalContext.current
     val gid: Long = GIDUtils.generateSerialGid(currentRadioSerial)
@@ -122,7 +123,10 @@ fun RadioActions(
     if (isShowGidAcquiringDialog) {
         GidAcquiringDialog(
             dismissAction = { isShowGidAcquiringDialog = false },
-            confirmClickAction = { gidNumber = it }
+            confirmClickAction = {
+                gidNumber = it
+                onSetTargetGid.invoke(it.toLong())
+            }
         )
     }
 
@@ -692,5 +696,6 @@ fun RadioActionsPreview() {
         onSendRelayHealthCheck = {},
         onGetTetherMode = {},
         onSetTetherMode = {_, _ -> },
+        onSetTargetGid = {}
     )
 }
