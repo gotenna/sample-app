@@ -535,7 +535,7 @@ fun RadioActions(
 
         item {
             DefaultWideButton(text = R.string.set_power_action_1) {
-                onSetPowerAndBandwidth(GTPowerLevel.ONE_HALF, GTBandwidth.BANDWIDTH_4_54)
+                onSetPowerAndBandwidth(GTPowerLevel.ONE_HALF, GTBandwidth.BANDWIDTH_7_28)
             }
         }
 
