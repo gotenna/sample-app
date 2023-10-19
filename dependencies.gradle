@@ -1,4 +1,4 @@
 ext {
     // Radio SDK
-    radio_sdk = "com.gotenna.sdk:radio-sdk-external:0.0.101"
+    radio_sdk = "com.gotenna.sdk:radio-sdk-external:0.1.0"
 }
