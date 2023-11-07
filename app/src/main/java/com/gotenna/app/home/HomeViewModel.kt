@@ -56,6 +56,11 @@ class HomeViewModel : ViewModel() {
     }.toMutableStateFlow(viewModelScope, false)
     val isSelectAll = _isSelectAll.asStateFlow()
 
+    private val _isUpdatingFirmware = MutableStateFlow(false)
+    val isUpdatingFirmware = _isUpdatingFirmware.asStateFlow()
+
+    lateinit var updateFirmwareJob: Job
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -1335,14 +1340,24 @@ class HomeViewModel : ViewModel() {
     }
 
     fun installFirmwareFile(fileData: ByteArray, targetFirmwareVersion: GTFirmwareVersion) {
-        viewModelScope.launch(Dispatchers.IO) {
-            logOutput.update { it + "got file of size ${fileData.size} target version: $targetFirmwareVersion\n\n" }
-            GotennaClient.bulkUpdateFirmware(fileData, listOf(selectedRadio?.value?.serialNumber ?: ""))
-//            val update = selectedRadio.value?.updateFirmware(firmwareFile = fileData, targetFirmware = GTFirmwareVersion(1, 1, 1))
-//            logOutput.update { it + update }
-            /*val time = measureTime {
-                GotennaClient.bulkUpdateFirmware(fileData, serialNumbers)
-            }*/
+        val handler = CoroutineExceptionHandler{ _, exception ->
+            println("FIRMWARE_UPDATE I'm the client exception handler an I got the exception: $exception")
+        }
+        if (!_isUpdatingFirmware.value) {
+            _isUpdatingFirmware.update { true }
+            updateFirmwareJob = viewModelScope.launch(handler) {
+                logOutput.update { it + "got file of size ${fileData.size} target version: $targetFirmwareVersion\n\n" }
+//            selectedRadio?.value?.updateFirmware(fileData, targetFirmwareVersion)
+                val serials = radioModels.value.map { it.serialNumber }
+                GotennaClient.bulkUpdateFirmware(fileData, serials)
+                _isUpdatingFirmware.update { false  }
+            }
+        } else {
+            println("FIRMWARE_UPDATE_CLIENT I have just cancelled the job")
+            updateFirmwareJob.cancel()
+            println("FIRMWARE_UPDATE, job is active: ${updateFirmwareJob.isActive} job is cancelled: ${updateFirmwareJob.isCancelled}")
+            logOutput.update { it + "Firmware update has been cancelled.\n\n" }
+            _isUpdatingFirmware.update { false }
         }
     }
     

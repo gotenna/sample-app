@@ -53,6 +53,7 @@ fun DetailScreen(
     val radio by viewModel.selectedRadio.collectAsState()
     val gripFile by viewModel.gripFile.collectAsState()
     val radios by viewModel.radioModels.collectAsState()
+    val isUpdatingFirmware by viewModel.isUpdatingFirmware.collectAsState()
     val context = LocalContext.current
     DisposableEffect(Unit) {
         val window = context.findActivity()?.window
@@ -163,6 +164,7 @@ fun DetailScreen(
             viewModel.getMCUArch()
         },
         onInstallFile = viewModel::installFirmwareFile,
+        isUpdatingFirmware = isUpdatingFirmware,
         onSendRelayHealthCheck = viewModel::sendRelayHealthCheck,
         onGetTetherMode = viewModel::getTetherMode,
         onSetTetherMode = viewModel::setTetherMode,
@@ -208,6 +210,7 @@ fun DetailScreen(
     onGetDeviceInfo: () -> Unit,
     onGetMcuArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,
+    isUpdatingFirmware: Boolean,
     onSendRelayHealthCheck: () -> Unit,
     onGetTetherMode: () -> Unit,
     onSetTetherMode: (Boolean, Int) -> Unit,
@@ -290,6 +293,7 @@ fun DetailScreen(
                 onGetMcuArch()
             },
             onInstallFile = onInstallFile,
+            isUpdatingFirmware = isUpdatingFirmware,
             onSendRelayHealthCheck = onSendRelayHealthCheck,
             onGetTetherMode = onGetTetherMode,
             onSetTetherMode = onSetTetherMode,
@@ -337,6 +341,7 @@ fun DetailScreenPreview() {
         onGetDeviceInfo = { },
         onGetMcuArch = {},
         onInstallFile = {_, _ -> },
+        isUpdatingFirmware = false,
         onSendRelayHealthCheck = {},
         onGetTetherMode = {},
         onSetTetherMode = {_, _ -> },

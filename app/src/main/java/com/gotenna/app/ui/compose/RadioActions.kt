@@ -106,6 +106,7 @@ fun RadioActions(
     onGetDeviceInfo: () -> Unit,
     onGetMCUArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,
+    isUpdatingFirmware: Boolean,
     onSendRelayHealthCheck: () -> Unit,
     onGetTetherMode: () -> Unit,
     onSetTetherMode: (Boolean, Int) -> Unit,
@@ -221,7 +222,7 @@ fun RadioActions(
                 val inputStream = context.contentResolver.openInputStream(it)
                 val bytes = inputStream?.readBytes() ?: byteArrayOf()
                 Text(text = "Selected file: ${bytes.size}", color = Gray)
-                DefaultWideButton(text = "Install selected file") {
+                DefaultWideButton(text = if (isUpdatingFirmware) "Cancel installing" else "Install selected file") {
                     onInstallFile(bytes, GTFirmwareVersion(128, 0, 69))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -693,6 +694,7 @@ fun RadioActionsPreview() {
         onSendFile = { _, _ -> },
         onGetMCUArch = {},
         onInstallFile = {_, _ -> },
+        isUpdatingFirmware = false,
         onSendRelayHealthCheck = {},
         onGetTetherMode = {},
         onSetTetherMode = {_, _ -> },
