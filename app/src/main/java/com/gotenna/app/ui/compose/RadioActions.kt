@@ -110,7 +110,9 @@ fun RadioActions(
     onSendRelayHealthCheck: () -> Unit,
     onGetTetherMode: () -> Unit,
     onSetTetherMode: (Boolean, Int) -> Unit,
-    onSetTargetGid: (Long) -> Unit
+    onSetTargetGid: (Long) -> Unit,
+    sendGroupInvite: (Long) -> Unit,
+    sendGroupChat: () -> Unit
 ) {
     val context = LocalContext.current
     val gid: Long = GIDUtils.generateSerialGid(currentRadioSerial)
@@ -253,6 +255,18 @@ fun RadioActions(
                 val message = RadioMessage.Builder(isPrivate = false)
                     .build(RadioMessage.Type.LOCATION)
                 onSendRadioMessage(message)
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Send group invite") {
+                sendGroupInvite(gidNumber.toLong())
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Send group chat") {
+                sendGroupChat.invoke()
             }
         }
 
@@ -698,6 +712,8 @@ fun RadioActionsPreview() {
         onSendRelayHealthCheck = {},
         onGetTetherMode = {},
         onSetTetherMode = {_, _ -> },
-        onSetTargetGid = {}
+        onSetTargetGid = {},
+        sendGroupChat = {},
+        sendGroupInvite = {}
     )
 }

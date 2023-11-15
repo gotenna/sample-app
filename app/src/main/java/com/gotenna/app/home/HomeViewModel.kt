@@ -19,6 +19,7 @@ import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
 import com.gotenna.radio.sdk.legacy.sdk.session.messages.GTMessageType
 import com.gotenna.radio.sdk.common.utils.GIDUtils
+import com.gotenna.radio.sdk.legacy.sdk.session.messages.GTMessagePriority
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.File
@@ -49,6 +50,7 @@ class HomeViewModel : ViewModel() {
 
     private val _radioModels = MutableStateFlow<List<RadioModel>>(emptyList())
     val radioModels = _radioModels.asStateFlow()
+    private var groupGid: Long = -1
 
     private val _isSelectAll = _radios.mapLatest { list ->
         val notConnectedRadios = list.filter { !(it.item as RadioModel).isConnected() }
@@ -111,6 +113,13 @@ class HomeViewModel : ViewModel() {
                                                     it + "Grip full file delivered: ${Date()}\ndata: ${executed.gripResult}\n"
                                                 }
                                             }
+                                        }
+                                    }
+                                    is SendToNetwork.Group -> {
+                                        if (executed.isInvite) {
+                                            groupGid = executed.groupGid
+                                            logOutput.update { it + "Received a group invitation setting :$groupGid on this radio" }
+                                            setGroupGid(groupGid)
                                         }
                                     }
                                     is SendToRadio.FirmwareUpdate -> {
@@ -1383,6 +1392,92 @@ class HomeViewModel : ViewModel() {
                 "Failure get tether returned data is ${result?.getErrorOrNull()}\n\n"
             }
 
+            logOutput.update { it + output }
+        }
+    }
+
+    fun setGroupGid(gid: Long) {
+        viewModelScope.launch(Dispatchers.IO)  {
+            val result = selectedRadio.value?.setGid(gid, GidType.GROUP)
+            val output = if (result?.isSuccess() == true) {
+                "Successfully set the group gid: $gid\n\n"
+            } else {
+                "Failed to set the group gid error: ${result?.getErrorOrNull()}\n\n"
+            }
+            logOutput.update { it + output }
+        }
+    }
+
+    fun sendGroupInvitation(destinationGid: Long) {
+        viewModelScope.launch(Dispatchers.IO)  {
+            groupGid = GIDUtils.generateRandomizedPersonalGID()
+            setGroupGid(groupGid)
+            val result = selectedRadio.value?.send(
+                SendToNetwork.Group(
+                    groupGid = groupGid,
+                    title = "test group",
+                    members = listOf(GMGroupMember(UUID.randomUUID().toString(), "Group Sender"),
+                        GMGroupMember(UUID.randomUUID().toString(), "Group Receiver")),
+                    isInvite = true,
+                    commandMetaData = CommandMetaData(
+                        messageType = GTMessageType.PRIVATE,
+                        destinationGid = destinationGid,
+                        isPeriodic = false,
+                        priority = GTMessagePriority.NORMAL,
+                        senderGid = selectedRadio.value?.personalGid ?: 0
+                    ),
+                    commandHeader = GotennaHeaderWrapper(
+                        messageTypeWrapper = MessageTypeWrapper.GROUP_INVITE,
+                        recipientUUID = UUID.randomUUID().toString(),
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
+                        senderUUID = UUID.randomUUID().toString(),
+                        senderCallsign = "Group Sender",
+                        encryptionParameters = null,
+                        uuid = UUID.randomUUID().toString()
+                    ),
+                )
+            )
+            val output = if (result?.isSuccess() == true) {
+                "Successfully set the group invite\n\n"
+            } else {
+                "Failed to set the group invite error: ${result?.getErrorOrNull()}\n\n"
+            }
+            logOutput.update { it + output }
+        }
+    }
+
+    fun sendChatToGroup() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = selectedRadio.value?.send(
+                SendToNetwork.ChatMessage(
+                    commandMetaData = CommandMetaData(
+                        messageType = GTMessageType.GROUP,
+                        destinationGid = groupGid,
+                        isPeriodic = false,
+                        priority = GTMessagePriority.NORMAL,
+                        senderGid = selectedRadio.value?.personalGid ?: 0
+                    ),
+                    commandHeader = GotennaHeaderWrapper(
+                        messageTypeWrapper = MessageTypeWrapper.GROUP_CHAT_MESSAGE,
+                        recipientUUID = UUID.randomUUID().toString(),
+                        senderGid = selectedRadio.value?.personalGid ?: 0,
+                        senderUUID = UUID.randomUUID().toString(),
+                        senderCallsign = "Group Sender",
+                        encryptionParameters = null,
+                        uuid = UUID.randomUUID().toString()
+                    ),
+                    text = "sent from serial ${selectedRadio.value?.serialNumber}",
+                    chatId = 1,
+                    chatMessageId = UUID.randomUUID().toString(),
+                    conversationId = null,
+                    conversationName = null,
+                )
+            )
+            val output = if (result?.isSuccess() == true) {
+                "Successfully set the group message\n\n"
+            } else {
+                "Failed to set the group message error: ${result?.getErrorOrNull()}\n\n"
+            }
             logOutput.update { it + output }
         }
     }

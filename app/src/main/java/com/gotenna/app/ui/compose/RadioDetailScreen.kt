@@ -170,6 +170,12 @@ fun DetailScreen(
         onSetTetherMode = viewModel::setTetherMode,
         onSetTargetGid = {
             viewModel.gidNumber = it
+        },
+        sendGroupInvite = {
+            viewModel.sendGroupInvitation(it)
+        },
+        sendGroupChat = {
+            viewModel.sendChatToGroup()
         }
     )
 }
@@ -214,7 +220,9 @@ fun DetailScreen(
     onSendRelayHealthCheck: () -> Unit,
     onGetTetherMode: () -> Unit,
     onSetTetherMode: (Boolean, Int) -> Unit,
-    onSetTargetGid: (Long) -> Unit
+    onSetTargetGid: (Long) -> Unit,
+    sendGroupInvite: (Long) -> Unit,
+    sendGroupChat: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -297,7 +305,9 @@ fun DetailScreen(
             onSendRelayHealthCheck = onSendRelayHealthCheck,
             onGetTetherMode = onGetTetherMode,
             onSetTetherMode = onSetTetherMode,
-            onSetTargetGid = onSetTargetGid
+            onSetTargetGid = onSetTargetGid,
+            sendGroupInvite = sendGroupInvite,
+            sendGroupChat = sendGroupChat
         )
 
     }
@@ -345,6 +355,8 @@ fun DetailScreenPreview() {
         onSendRelayHealthCheck = {},
         onGetTetherMode = {},
         onSetTetherMode = {_, _ -> },
-        onSetTargetGid = {}
+        onSetTargetGid = {},
+        sendGroupInvite = {},
+        sendGroupChat = {}
     )
 }
