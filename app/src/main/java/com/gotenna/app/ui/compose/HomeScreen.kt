@@ -19,7 +19,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.gotenna.app.R
 import com.gotenna.app.home.HomeState
-import com.gotenna.app.model.ListItem
+import com.gotenna.app.model.RadioListItem
 import com.gotenna.app.ui.*
 import com.gotenna.app.ui.theme.*
 import com.gotenna.app.util.clickableWithRipple
@@ -36,7 +36,7 @@ fun HomeScreenPreview() {
 @Composable
 fun HomeScreen(
     state: HomeState,
-    onNavigateToDetail: (ListItem) -> Unit,
+    onNavigateToDetail: (RadioListItem) -> Unit,
 ) {
     val permissionsState =
         rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.BLUETOOTH_SCAN,
@@ -67,7 +67,7 @@ fun HomeScreen(
                     )
                 }
             },
-            isShowSelectAllButton = state.radios.value.isNotEmpty() && !state.radios.value.all { (it.item as RadioModel).isConnected() },
+            isShowSelectAllButton = state.radios.value.isNotEmpty() && !state.radios.value.all { it.radioModel.isConnected() },
             isSelectAll = state.isSelectAll.value,
             selectAllCheckAction = { state.selectAllCheckAction?.let { it() } },
             scannedRadiosCount = state.scannedRadiosCount.value,
@@ -165,10 +165,10 @@ fun SelectAllButton(isChecked: Boolean, checkAction: () -> Unit) {
 
 @Composable
 fun ColumnScope.RadioList(
-    listItems: List<ListItem>,
-    itemClickAction: (ListItem) -> Unit,
-    itemLongClickAction: (ListItem) -> Unit,
-    navigateAction: (ListItem) -> Unit
+    listItems: List<RadioListItem>,
+    itemClickAction: (RadioListItem) -> Unit,
+    itemLongClickAction: (RadioListItem) -> Unit,
+    navigateAction: (RadioListItem) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -193,13 +193,13 @@ fun ColumnScope.RadioList(
 
 @Composable
 fun RadioItem(
-    listItem: ListItem,
+    listItem: RadioListItem,
     index: Int,
-    clickAction: (ListItem) -> Unit,
-    longClickAction: (ListItem) -> Unit,
-    navigateAction: (ListItem) -> Unit
+    clickAction: (RadioListItem) -> Unit,
+    longClickAction: (RadioListItem) -> Unit,
+    navigateAction: (RadioListItem) -> Unit
 ) {
-    val radio = listItem.item as RadioModel
+    val radio = listItem.radioModel
     val isConnected = radio.isConnected()
 
     Row(

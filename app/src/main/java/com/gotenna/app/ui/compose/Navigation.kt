@@ -3,12 +3,12 @@ package com.gotenna.app.ui.compose
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.gotenna.app.home.HomeViewModel
-import com.gotenna.app.model.ListItem
+import com.gotenna.app.model.RadioListItem
 
 
 fun NavGraphBuilder.homeScreen(
     viewModel: HomeViewModel,
-    onNavigateToDetails: (ListItem) -> Unit
+    onNavigateToDetails: (RadioListItem) -> Unit
 ) {
     composable("home") {
         HomeScreen(

@@ -35,7 +35,6 @@ import kotlinx.coroutines.launch
 private const val TAG = "NINJA"
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
     val viewModel: HomeViewModel by viewModels()
     private val ENABLE_BLUETOOTH_REQUEST_CODE = 1
