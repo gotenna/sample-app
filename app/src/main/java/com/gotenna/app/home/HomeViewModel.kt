@@ -35,10 +35,15 @@ class HomeViewModel : ViewModel() {
     val logOutput = MutableStateFlow("Start of logs:\n\n")
 
     val connectTypeIndex = _connectionType.mapLatest { it.ordinal }
-    val isConnectAvailable = _radios.mapLatest { list -> list.any { it.isSelected } }
+
+    val isConnectAvailable = _radios.mapLatest { list ->
+        list.any { it.isSelected }
+    }
+
     val scannedRadiosCount = _radios.mapLatest { list ->
         list.count { (it.item as RadioModel).isScannedOrDisconnected() }
     }
+
     val connectedRadiosCount = _radios.mapLatest { list ->
         list.count { (it.item as RadioModel).isConnected() }
     }
@@ -56,6 +61,7 @@ class HomeViewModel : ViewModel() {
         val notConnectedRadios = list.filter { !(it.item as RadioModel).isConnected() }
         notConnectedRadios.all { it.isSelected }
     }.toMutableStateFlow(viewModelScope, false)
+
     val isSelectAll = _isSelectAll.asStateFlow()
 
     private val _isUpdatingFirmware = MutableStateFlow(false)
