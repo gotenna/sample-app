@@ -31,5 +31,5 @@ dependencyResolutionManagement {
         }
     }
 }
-rootProject.name = "radio-sdk-android"
+rootProject.name = "sample-app"
 include ':app'
