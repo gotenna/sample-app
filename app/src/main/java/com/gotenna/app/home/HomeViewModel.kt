@@ -6,25 +6,56 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gotenna.app.model.RadioListItem
 import com.gotenna.app.ui.compose.mobyDickText
-import com.gotenna.app.util.*
+import com.gotenna.app.util.isConnected
+import com.gotenna.app.util.isScannedOrDisconnected
+import com.gotenna.app.util.replaceItem
+import com.gotenna.app.util.toListItems
+import com.gotenna.app.util.toMutableStateFlow
 import com.gotenna.radio.sdk.GotennaClient
-import com.gotenna.radio.sdk.common.models.*
-import com.gotenna.radio.sdk.common.results.*
-import com.gotenna.radio.sdk.common.models.radio.*
+import com.gotenna.radio.sdk.common.models.FrequencyBandwidth
+import com.gotenna.radio.sdk.common.models.PowerLevel
+import com.gotenna.radio.sdk.common.models.radio.CommandMetaData
+import com.gotenna.radio.sdk.common.models.radio.ConnectionType
+import com.gotenna.radio.sdk.common.models.radio.Coordinate
+import com.gotenna.radio.sdk.common.models.radio.EncryptionParameters
+import com.gotenna.radio.sdk.common.models.radio.GidType
+import com.gotenna.radio.sdk.common.models.radio.GotennaHeaderWrapper
+import com.gotenna.radio.sdk.common.models.radio.MapObject
+import com.gotenna.radio.sdk.common.models.radio.MessageTypeWrapper
+import com.gotenna.radio.sdk.common.models.radio.RadioModel
+import com.gotenna.radio.sdk.common.models.radio.SendToNetwork
+import com.gotenna.radio.sdk.common.models.radio.SendToRadio
 import com.gotenna.radio.sdk.common.results.GripResult
+import com.gotenna.radio.sdk.common.results.RadioResult
+import com.gotenna.radio.sdk.common.results.executedOrNull
+import com.gotenna.radio.sdk.common.results.getErrorOrNull
+import com.gotenna.radio.sdk.common.results.isSuccess
+import com.gotenna.radio.sdk.common.utils.GIDUtils
 import com.gotenna.radio.sdk.legacy.modules.messaging.atak.wrapper.GMGroupMember
 import com.gotenna.radio.sdk.legacy.sdk.firmware.GTFirmwareVersion
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
-import com.gotenna.radio.sdk.legacy.sdk.session.messages.GTMessageType
-import com.gotenna.radio.sdk.common.utils.GIDUtils
 import com.gotenna.radio.sdk.legacy.sdk.session.messages.GTMessagePriority
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import com.gotenna.radio.sdk.legacy.sdk.session.messages.GTMessageType
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.charset.Charset
-import java.util.*
+import java.util.Date
+import java.util.Random
+import java.util.UUID
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -635,7 +666,7 @@ class HomeViewModel : ViewModel() {
                 uuid = UUID.randomUUID().toString(),
                 name = "frequency title",
                 powerSetting = PowerLevel.HALF_WATT,
-                bandwidthSetting = FrequencyBandwidth.BW_4_84KHZ,
+                bandwidthSetting = FrequencyBandwidth.BW_7_28KHZ,
                 useOnly = true,
                 frequencyChannels = listOf(
                     SendToNetwork.SharedFrequency.FrequencyChannel(
