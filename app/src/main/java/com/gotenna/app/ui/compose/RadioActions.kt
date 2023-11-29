@@ -549,14 +549,14 @@ fun RadioActions(
         }
 
         item {
-            DefaultWideButton(text = R.string.set_power_action_1) {
-                onSetPowerAndBandwidth(GTPowerLevel.ONE_HALF, GTBandwidth.BANDWIDTH_7_28)
+            DefaultWideButton(text = R.string.set_power_action_1_7_28) {
+                onSetPowerAndBandwidth(GTPowerLevel.ONE, GTBandwidth.BANDWIDTH_7_28)
             }
         }
 
         item {
-            DefaultWideButton(text = R.string.set_power_action_2) {
-                onSetPowerAndBandwidth(GTPowerLevel.ONE, GTBandwidth.BANDWIDTH_7_28)
+            DefaultWideButton(text = R.string.set_power_action_0_5_11_80) {
+                onSetPowerAndBandwidth(GTPowerLevel.ONE_HALF, GTBandwidth.BANDWIDTH_11_8)
             }
         }
 

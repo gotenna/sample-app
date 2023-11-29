@@ -20,8 +20,8 @@
     <string name="set_gid_action">Set Private Gid</string>
     <string name="delete_git_action">Delete Private Gid</string>
     <string name="set_token_action">Set Sdk Token</string>
-    <string name="set_power_action_1">Set Power and Bandwidth 0.5/4.54</string>
-    <string name="set_power_action_2">Set Power and Bandwidth 1/7.28</string>
+    <string name="set_power_action_1_7_28">Set Power and Bandwidth 1/7.28</string>
+    <string name="set_power_action_0_5_11_80">Set Power and Bandwidth 0.5/11.80</string>
     <string name="get_power_action">Get power and bandwidth</string>
     <string name="set_frequency_action">Set Frequency channel 149/159</string>
     <string name="get_frequency_action">Get frequency channels</string>
