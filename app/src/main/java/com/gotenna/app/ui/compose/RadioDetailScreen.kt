@@ -28,7 +28,7 @@ import com.gotenna.app.ui.theme.Gray
 import com.gotenna.app.ui.theme.ScreenBackground
 import com.gotenna.radio.sdk.common.models.radio.GidType
 import com.gotenna.radio.sdk.common.models.radio.RadioModel
-import com.gotenna.radio.sdk.common.models.radio.SendToNetwork
+import com.gotenna.common.models.SendToNetwork
 import com.gotenna.radio.sdk.legacy.sdk.firmware.GTFirmwareVersion
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
