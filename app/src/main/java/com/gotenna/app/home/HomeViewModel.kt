@@ -38,6 +38,7 @@ import com.gotenna.radio.sdk.legacy.sdk.firmware.GTFirmwareVersion
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
+import com.gotenna.radio.sdk.legacy.sdk.session.properties.Properties
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -344,6 +345,16 @@ class HomeViewModel : ViewModel() {
             "Failure set power/bandwidth returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
+        logOutput.update { it + output }
+    }
+    
+    fun setOperationMode(mode: Properties.GTOperationMode) = viewModelScope.launch(Dispatchers.IO) {
+        val result = selectedRadio.value?.setOperationMode(mode)
+        val output = if (result?.isSuccess() == true) {
+            "Success set operation mode to $mode returned data is ${result.executedOrNull()}\n\n"
+        } else {
+            "Failure set operation mode to $mode returned data is ${result?.getErrorOrNull()}\n\n"
+        }
         logOutput.update { it + output }
     }
 

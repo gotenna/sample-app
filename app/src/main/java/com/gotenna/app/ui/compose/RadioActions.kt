@@ -35,6 +35,7 @@ import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
 import com.gotenna.radio.sdk.common.utils.GIDUtils
+import com.gotenna.radio.sdk.legacy.sdk.session.properties.Properties
 import java.io.File
 import java.io.FileOutputStream
 
@@ -103,6 +104,7 @@ fun RadioActions(
     onGetPowerAndBandwidth: () -> Unit,
     onSetFrequencyChannels: (List<GTFrequencyChannel>) -> Unit,
     onGetFrequencyChannels: () -> Unit,
+    onSetOperationMode: (Properties.GTOperationMode) -> Unit,
     onGetDeviceInfo: () -> Unit,
     onGetMCUArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,
@@ -595,6 +597,12 @@ fun RadioActions(
         }
 
         item {
+            DefaultWideButton(text = "Set Op Mode to RELAY") {
+                onSetOperationMode(Properties.GTOperationMode.RELAY)
+            }
+        }
+
+        item {
             DefaultWideButton(text = "Get Tether Mode") {
                 onGetTetherMode()
             }
@@ -704,6 +712,7 @@ fun RadioActionsPreview() {
         onGetPowerAndBandwidth = {},
         onSetFrequencyChannels = {},
         onGetFrequencyChannels = {},
+        onSetOperationMode = {},
         onGetDeviceInfo = {},
         onSendFile = { _, _ -> },
         onGetMCUArch = {},

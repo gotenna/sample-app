@@ -33,6 +33,7 @@ import com.gotenna.radio.sdk.legacy.sdk.firmware.GTFirmwareVersion
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
 import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
+import com.gotenna.radio.sdk.legacy.sdk.session.properties.Properties
 import java.io.File
 import java.io.FileOutputStream
 
@@ -159,6 +160,7 @@ fun DetailScreen(
         onGetPowerAndBandwidth = viewModel::getPowerAndBandwidth,
         onSetFrequencyChannels = viewModel::setFrequencyChannels,
         onGetFrequencyChannels = viewModel::getFrequencyChannels,
+        onSetOperationMode = viewModel::setOperationMode,
         onGetDeviceInfo = viewModel::getDeviceInfo,
         onGetMcuArch = {
             viewModel.getMCUArch()
@@ -213,6 +215,7 @@ fun DetailScreen(
     onGetPowerAndBandwidth: () -> Unit,
     onSetFrequencyChannels: (List<GTFrequencyChannel>) -> Unit,
     onGetFrequencyChannels: () -> Unit,
+    onSetOperationMode: (Properties.GTOperationMode) -> Unit,
     onGetDeviceInfo: () -> Unit,
     onGetMcuArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,
@@ -296,6 +299,7 @@ fun DetailScreen(
             onGetPowerAndBandwidth = onGetPowerAndBandwidth,
             onSetFrequencyChannels = onSetFrequencyChannels,
             onGetFrequencyChannels = onGetFrequencyChannels,
+            onSetOperationMode = onSetOperationMode,
             onGetDeviceInfo = onGetDeviceInfo,
             onGetMCUArch = {
                 onGetMcuArch()
@@ -348,6 +352,7 @@ fun DetailScreenPreview() {
         onGetPowerAndBandwidth = { },
         onSetFrequencyChannels = { },
         onGetFrequencyChannels = { },
+        onSetOperationMode = { },
         onGetDeviceInfo = { },
         onGetMcuArch = {},
         onInstallFile = {_, _ -> },
