@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -16,11 +18,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.gotenna.app.R
 import com.gotenna.app.home.*
 import com.gotenna.app.ui.SimpleTopAppBar
 import com.gotenna.app.ui.theme.Black
@@ -235,8 +239,18 @@ fun DetailScreen(
             .background(ScreenBackground)
     ) {
         SimpleTopAppBar(
-            text = "Device $radioSerialNumber",
-            backgroundColor = Black
+            text = "S/N: $radioSerialNumber",
+            backgroundColor = Black,
+            actions = {
+                IconButton(onClick = onPerformLedBlink) {
+                    Icon(
+                        modifier = Modifier.padding(16.dp),
+                        painter = painterResource(id = R.drawable.led),
+                        contentDescription = "Blink LED",
+                        tint = Color.White
+                    )
+                }
+            }
         )
 
         Text(

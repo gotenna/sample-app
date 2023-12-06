@@ -233,12 +233,17 @@ fun HorizontalDivider(startPadding: Dp) {
 }
 
 @Composable
-fun SimpleTopAppBar(text: Any, backgroundColor: Color) {
+fun SimpleTopAppBar(
+    text: Any,
+    backgroundColor: Color,
+    actions: @Composable RowScope.() -> Unit = {}
+) {
     TopAppBar(
         title = {
             SimpleText(text = text, color = White, fontSize = Medium)
         },
-        backgroundColor = backgroundColor
+        backgroundColor = backgroundColor,
+        actions = actions
     )
 }
 
