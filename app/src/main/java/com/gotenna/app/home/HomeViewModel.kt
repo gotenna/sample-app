@@ -723,7 +723,7 @@ class HomeViewModel : ViewModel() {
                     appCode = 123,
                 ),
                 name = byteArrayOf(8, 108, 101, 104, 32, 32, 32, 32, 32, 32),
-                uuidCounter = byteArrayOf(0),
+                keyUuid = byteArrayOf(0),
                 salt = byteArrayOf(
                     -59,
                     -118,
