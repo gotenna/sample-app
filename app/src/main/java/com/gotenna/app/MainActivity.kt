@@ -21,7 +21,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.ui.NavigationUI
-import com.gotenna.app.databinding.ActivityMainBinding
 import com.gotenna.app.home.HomeViewModel
 import com.gotenna.app.ui.compose.detailScreen
 import com.gotenna.app.ui.compose.homeScreen
