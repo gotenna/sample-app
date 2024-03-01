@@ -24,6 +24,7 @@ import androidx.navigation.ui.NavigationUI
 import com.gotenna.app.home.HomeViewModel
 import com.gotenna.app.ui.compose.detailScreen
 import com.gotenna.app.ui.compose.homeScreen
+import com.gotenna.app.ui.compose.voiceScreen
 import com.gotenna.radio.sdk.GotennaClient
 import com.gotenna.radio.sdk.common.models.radio.ConnectionType
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +72,12 @@ class MainActivity : AppCompatActivity() {
             )
             detailScreen(
                 viewModel = viewModel,
+                onNavigateToVoice = {
+                    navController.navigate("voice")
+                }
             )
+            voiceScreen(viewModel, applicationContext)
+            // todo something nicer for setting this up
         }
 
         NavigationUI.setupActionBarWithNavController(this, navController)

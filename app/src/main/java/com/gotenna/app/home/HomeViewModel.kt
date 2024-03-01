@@ -2,9 +2,13 @@ package com.gotenna.app.home
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gotenna.app.model.RadioListItem
+import com.gotenna.app.model.VoiceScreenState
 import com.gotenna.app.ui.compose.mobyDickText
 import com.gotenna.app.util.isConnected
 import com.gotenna.app.util.isScannedOrDisconnected
@@ -29,6 +33,9 @@ import com.gotenna.radio.sdk.common.models.radio.ConnectionType
 import com.gotenna.radio.sdk.common.models.radio.GidType
 import com.gotenna.radio.sdk.common.models.radio.RadioModel
 import com.gotenna.radio.sdk.common.models.radio.SendToRadio
+import com.gotenna.radio.sdk.common.models.radio.ht.CodecModes
+import com.gotenna.radio.sdk.common.models.radio.ht.HTAudioManager
+import com.gotenna.radio.sdk.common.models.radio.ht.SampleMode
 import com.gotenna.radio.sdk.common.results.RadioResult
 import com.gotenna.radio.sdk.common.results.executedOrNull
 import com.gotenna.radio.sdk.common.results.getErrorOrNull
@@ -46,6 +53,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -301,6 +309,62 @@ class HomeViewModel : ViewModel() {
         scannedRadiosCount = scannedRadiosCount.collectAsState(initial = 0),
         connectedRadiosCount = connectedRadiosCount.collectAsState(initial = 0)
     )
+
+    private val recordingState = MutableStateFlow(false)
+
+    @Composable
+    fun voiceState() = VoiceScreenState(
+        recording = recordingState.collectAsState()
+    )
+
+    var codec2SampleRate by mutableStateOf("")
+        private set
+
+    var audioSampleRate by mutableStateOf("")
+        private  set
+
+    private val numberPattern = Regex("(^[0-9]+\$|^\$)")
+    fun updateCodec2SampleRate(input: String) {
+        if (input.matches(numberPattern)) {
+            codec2SampleRate = input
+        }
+    }
+
+    fun updatedAudioSampleRate(input: String) {
+        if (input.matches(numberPattern)) {
+            audioSampleRate = input
+        }
+    }
+
+    fun updateCodec2Settings(codecModes: CodecModes, sampleMode: SampleMode) {
+        HTAudioManager.updateAudioSettings(codecModes, sampleMode, 16000)
+    }
+
+    fun startRecording() {
+        viewModelScope.launch(Dispatchers.IO) {
+            recordingState.emit(true)
+            HTAudioManager.startRecording()
+        }
+    }
+
+    fun stopRecording() {
+        viewModelScope.launch(Dispatchers.IO) {
+            recordingState.emit(false)
+            HTAudioManager.stopRecording()
+        }
+    }
+
+    fun startPlaybackEncoded() {
+        viewModelScope.launch(Dispatchers.IO) {
+            HTAudioManager.startPlaybackEncoded(SendToRadio.PerformLedBlink())
+        }
+    }
+
+    fun startPlayback() {
+        viewModelScope.launch(Dispatchers.IO) {
+            HTAudioManager.startPlayback(SendToRadio.PerformLedBlink())
+        }
+    }
 
     // TODO these probably go in another viewmodel or need to get the radio from the existing list
 
@@ -824,7 +888,7 @@ class HomeViewModel : ViewModel() {
                     -114,
                     -58,
                     -119
-                ),
+                )
             )
         )
         val output = if (result?.isSuccess() == true) {

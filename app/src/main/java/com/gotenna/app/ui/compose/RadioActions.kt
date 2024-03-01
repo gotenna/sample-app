@@ -114,7 +114,8 @@ fun RadioActions(
     onSetTetherMode: (Boolean, Int) -> Unit,
     onSetTargetGid: (Long) -> Unit,
     sendGroupInvite: (Long) -> Unit,
-    sendGroupChat: () -> Unit
+    sendGroupChat: () -> Unit,
+    navigateToVoice: () -> Unit
 ) {
     val context = LocalContext.current
     val gid: Long = GIDUtils.generateSerialGid(currentRadioSerial)
@@ -195,6 +196,12 @@ fun RadioActions(
                     onSetGid(it.gid.toLong(), GidType.PRIVATE)
                 }
             )
+        }
+
+        item {
+            DefaultWideButton(text = "Voice communication") {
+                navigateToVoice()
+            }
         }
 
         item {
@@ -723,6 +730,7 @@ fun RadioActionsPreview() {
         onSetTetherMode = {_, _ -> },
         onSetTargetGid = {},
         sendGroupChat = {},
-        sendGroupInvite = {}
+        sendGroupInvite = {},
+        navigateToVoice = {}
     )
 }

@@ -53,6 +53,7 @@ fun Context.findActivity(): Activity? {
 @Composable
 fun DetailScreen(
     viewModel: HomeViewModel = viewModel(),
+    navigateToVoice: () -> Unit
 ) {
     val logOutput by viewModel.logOutput.collectAsState()
     val radio by viewModel.selectedRadio.collectAsState()
@@ -182,6 +183,9 @@ fun DetailScreen(
         },
         sendGroupChat = {
             viewModel.sendChatToGroup()
+        },
+        navigateToVoice = {
+            navigateToVoice()
         }
     )
 }
@@ -229,7 +233,8 @@ fun DetailScreen(
     onSetTetherMode: (Boolean, Int) -> Unit,
     onSetTargetGid: (Long) -> Unit,
     sendGroupInvite: (Long) -> Unit,
-    sendGroupChat: () -> Unit
+    sendGroupChat: () -> Unit,
+    navigateToVoice: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -325,7 +330,8 @@ fun DetailScreen(
             onSetTetherMode = onSetTetherMode,
             onSetTargetGid = onSetTargetGid,
             sendGroupInvite = sendGroupInvite,
-            sendGroupChat = sendGroupChat
+            sendGroupChat = sendGroupChat,
+            navigateToVoice = navigateToVoice
         )
 
     }
@@ -376,6 +382,7 @@ fun DetailScreenPreview() {
         onSetTetherMode = {_, _ -> },
         onSetTargetGid = {},
         sendGroupInvite = {},
-        sendGroupChat = {}
+        sendGroupChat = {},
+        navigateToVoice = {}
     )
 }

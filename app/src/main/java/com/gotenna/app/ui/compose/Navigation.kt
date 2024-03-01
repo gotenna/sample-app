@@ -1,5 +1,6 @@
 package com.gotenna.app.ui.compose
 
+import android.content.Context
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.gotenna.app.home.HomeViewModel
@@ -19,9 +20,16 @@ fun NavGraphBuilder.homeScreen(
 }
 
 fun NavGraphBuilder.detailScreen(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    onNavigateToVoice: () -> Unit
 ) {
     composable("detail") {
-        DetailScreen(viewModel = viewModel)
+        DetailScreen(viewModel = viewModel, navigateToVoice = onNavigateToVoice)
+    }
+}
+
+fun NavGraphBuilder.voiceScreen(viewModel: HomeViewModel, context: Context) {
+    composable("voice") {
+        VoiceScreen(state = viewModel.voiceState(), viewmodel = viewModel, context = context)
     }
 }
