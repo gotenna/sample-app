@@ -8,7 +8,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gotenna.app.model.RadioListItem
-import com.gotenna.app.model.VoiceScreenState
 import com.gotenna.app.ui.compose.mobyDickText
 import com.gotenna.app.util.isConnected
 import com.gotenna.app.util.isScannedOrDisconnected
@@ -33,9 +32,6 @@ import com.gotenna.radio.sdk.common.models.radio.ConnectionType
 import com.gotenna.radio.sdk.common.models.radio.GidType
 import com.gotenna.radio.sdk.common.models.radio.RadioModel
 import com.gotenna.radio.sdk.common.models.radio.SendToRadio
-import com.gotenna.radio.sdk.common.models.radio.ht.CodecModes
-import com.gotenna.radio.sdk.common.models.radio.ht.HTAudioManager
-import com.gotenna.radio.sdk.common.models.radio.ht.SampleMode
 import com.gotenna.radio.sdk.common.results.RadioResult
 import com.gotenna.radio.sdk.common.results.executedOrNull
 import com.gotenna.radio.sdk.common.results.getErrorOrNull
@@ -53,7 +49,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -310,12 +305,7 @@ class HomeViewModel : ViewModel() {
         connectedRadiosCount = connectedRadiosCount.collectAsState(initial = 0)
     )
 
-    private val recordingState = MutableStateFlow(false)
-
-    @Composable
-    fun voiceState() = VoiceScreenState(
-        recording = recordingState.collectAsState()
-    )
+    val recordingState = MutableStateFlow(false)
 
     var codec2SampleRate by mutableStateOf("")
         private set
@@ -333,36 +323,6 @@ class HomeViewModel : ViewModel() {
     fun updatedAudioSampleRate(input: String) {
         if (input.matches(numberPattern)) {
             audioSampleRate = input
-        }
-    }
-
-    fun updateCodec2Settings(codecModes: CodecModes, sampleMode: SampleMode) {
-        HTAudioManager.updateAudioSettings(codecModes, sampleMode, 16000)
-    }
-
-    fun startRecording() {
-        viewModelScope.launch(Dispatchers.IO) {
-            recordingState.emit(true)
-            HTAudioManager.startRecording()
-        }
-    }
-
-    fun stopRecording() {
-        viewModelScope.launch(Dispatchers.IO) {
-            recordingState.emit(false)
-            HTAudioManager.stopRecording()
-        }
-    }
-
-    fun startPlaybackEncoded() {
-        viewModelScope.launch(Dispatchers.IO) {
-            HTAudioManager.startPlaybackEncoded(SendToRadio.PerformLedBlink())
-        }
-    }
-
-    fun startPlayback() {
-        viewModelScope.launch(Dispatchers.IO) {
-            HTAudioManager.startPlayback(SendToRadio.PerformLedBlink())
         }
     }
 
