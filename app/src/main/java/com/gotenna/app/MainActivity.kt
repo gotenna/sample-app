@@ -13,18 +13,11 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.ui.NavigationUI
 import com.gotenna.app.home.HomeViewModel
-import com.gotenna.app.ui.compose.detailScreen
-import com.gotenna.app.ui.compose.homeScreen
-import com.gotenna.app.ui.compose.voiceScreen
 import com.gotenna.radio.sdk.GotennaClient
 import com.gotenna.radio.sdk.common.models.radio.ConnectionType
 import kotlinx.coroutines.Dispatchers
@@ -53,35 +46,6 @@ class MainActivity : AppCompatActivity() {
         setContent {
             MainScreen()
         }
-    }
-
-    @Composable
-    private fun MainScreen() {
-        val navController = rememberNavController()
-
-        NavHost(
-            navController = navController,
-            startDestination = "home"
-        ) {
-            homeScreen(
-                viewModel = viewModel,
-                onNavigateToDetails = {
-                    viewModel.setSelectedRadio(it)
-                    navController.navigate("detail")
-                }
-            )
-            detailScreen(
-                viewModel = viewModel,
-                onNavigateToVoice = {
-                    navController.navigate("voice")
-                }
-            )
-            voiceScreen(viewModel, applicationContext)
-            // todo something nicer for setting this up
-        }
-
-        NavigationUI.setupActionBarWithNavController(this, navController)
-        supportActionBar?.hide()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

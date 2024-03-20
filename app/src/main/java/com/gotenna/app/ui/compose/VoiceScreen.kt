@@ -33,6 +33,11 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.gotenna.app.home.HomeViewModel
+import com.gotenna.app.home.startPlayback
+import com.gotenna.app.home.startPlaybackEncoded
+import com.gotenna.app.home.startRecording
+import com.gotenna.app.home.stopRecording
+import com.gotenna.app.home.updateCodec2Settings
 import com.gotenna.app.model.VoiceScreenState
 import com.gotenna.app.ui.DefaultWideButton
 import com.gotenna.app.ui.SimpleTopAppBar
