@@ -25,7 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-private const val TAG = "NINJA"
+private const val TAG = "RadioSDK"
 
 class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
