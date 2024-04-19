@@ -28,6 +28,7 @@ import com.gotenna.common.models.MessageTypeWrapper
 import com.gotenna.common.models.PowerLevel
 import com.gotenna.common.models.SendToNetwork
 import com.gotenna.radio.sdk.GotennaClient
+import com.gotenna.radio.sdk.common.models.DeliveryResult
 import com.gotenna.radio.sdk.common.models.radio.ConnectionType
 import com.gotenna.radio.sdk.common.models.radio.GidType
 import com.gotenna.radio.sdk.common.models.radio.RadioModel
@@ -55,11 +56,14 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.nio.charset.Charset
 import java.util.Date
-import java.util.Random
 import java.util.UUID
+import kotlin.random.Random
+import kotlin.system.measureTimeMillis
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -886,15 +890,15 @@ class HomeViewModel : ViewModel() {
                     points = listOf(
                         MapObject.ObjectData.Route.RoutePoint(
                             coordinates = Coordinate(
-                                lat = Random().nextDouble(),
-                                long = Random().nextDouble()
+                                lat = Random.nextDouble(),
+                                long = Random.nextDouble()
                             ),
                             positionInRoute = 0,
                             isWaypoint = false
                         ), MapObject.ObjectData.Route.RoutePoint(
                             coordinates = Coordinate(
-                                lat = Random().nextDouble(),
-                                long = Random().nextDouble()
+                                lat = Random.nextDouble(),
+                                long = Random.nextDouble()
                             ),
                             positionInRoute = 1,
                             isWaypoint = true
@@ -930,10 +934,10 @@ class HomeViewModel : ViewModel() {
                 title = "circle name",
                 how = "m-g",
                 data = MapObject.ObjectData.Circle(
-                    radius = Random().nextDouble(),
+                    radius = Random.nextDouble(),
                     centerPoint = Coordinate(
-                        lat = Random().nextDouble(),
-                        long = Random().nextDouble()
+                        lat = Random.nextDouble(),
+                        long = Random.nextDouble()
                     ),
                     rings = 1,
                     strokeColor = 3,
@@ -976,9 +980,9 @@ class HomeViewModel : ViewModel() {
                 how = "h-g",
                 data = MapObject.ObjectData.Shape(
                     points = listOf(
-                        Coordinate(Random().nextDouble(), Random().nextDouble()),
-                        Coordinate(Random().nextDouble(), Random().nextDouble()),
-                        Coordinate(Random().nextDouble(), Random().nextDouble())
+                        Coordinate(Random.nextDouble(), Random.nextDouble()),
+                        Coordinate(Random.nextDouble(), Random.nextDouble()),
+                        Coordinate(Random.nextDouble(), Random.nextDouble())
                     ),
                     fillColor = 123,
                     strokeColor = 123,
@@ -1056,12 +1060,12 @@ class HomeViewModel : ViewModel() {
                 title = "map pin",
                 data = MapObject.ObjectData.Pin(
                     coordinate = Coordinate(
-                        lat = Random().nextDouble(),
-                        long = Random().nextDouble(),
-                        altitude = Random().nextDouble()
+                        lat = Random.nextDouble(),
+                        long = Random.nextDouble(),
+                        altitude = Random.nextDouble()
                     ),
-                    height = Random().nextDouble(),
-                    locationError = Random().nextDouble(),
+                    height = Random.nextDouble(),
+                    locationError = Random.nextDouble(),
                     type = "a-f-g",
                     iconPath = "icon/path/test.png",
                     team = "Green",
@@ -1097,12 +1101,12 @@ class HomeViewModel : ViewModel() {
                 title = "map vehicle",
                 data = MapObject.ObjectData.Vehicle(
                     coordinate = Coordinate(
-                        lat = Random().nextDouble(),
-                        long = Random().nextDouble(),
-                        altitude = Random().nextDouble()
+                        lat = Random.nextDouble(),
+                        long = Random.nextDouble(),
+                        altitude = Random.nextDouble()
                     ),
-                    height = Random().nextDouble(),
-                    locationError = Random().nextDouble(),
+                    height = Random.nextDouble(),
+                    locationError = Random.nextDouble(),
 //                        typ = "a-f-g",
                     modelCategory = MapObject.ObjectData.Vehicle.VehicleCategories.AIRCRAFT,
                     modelName = "warthog",
@@ -1115,7 +1119,7 @@ class HomeViewModel : ViewModel() {
 //                        fillColor = "1234",
 //                        tog = "123", TODO do we need in new?
                     iconPath = "path/icon/test.png",
-                    azimuth = Random().nextDouble(),
+                    azimuth = Random.nextDouble(),
                 )
             )
         )
@@ -1147,12 +1151,12 @@ class HomeViewModel : ViewModel() {
                 title = "casevac map item",
                 data = MapObject.ObjectData.CasEvac(
                     coordinate = Coordinate(
-                        lat = Random().nextDouble(),
-                        long = Random().nextDouble(),
-                        altitude = Random().nextDouble()
+                        lat = Random.nextDouble(),
+                        long = Random.nextDouble(),
+                        altitude = Random.nextDouble()
                     ),
-                    height = Random().nextDouble(),
-                    locationError = Random().nextDouble(),
+                    height = Random.nextDouble(),
+                    locationError = Random.nextDouble(),
                     frequency = "often?",
                     patientsByPrecedence = MapObject.ObjectData.CasEvac.PatientsByPrecedence(
                         1,
@@ -1191,9 +1195,9 @@ class HomeViewModel : ViewModel() {
                     ),
                     hlzBrief = MapObject.ObjectData.CasEvac.HlzBrief(
                         Coordinate(
-                            lat = Random().nextDouble(),
-                            long = Random().nextDouble(),
-                            altitude = Random().nextDouble()
+                            lat = Random.nextDouble(),
+                            long = Random.nextDouble(),
+                            altitude = Random.nextDouble()
                         ),
                         markedBy = "flame",
                         obstacles = "fire",
@@ -1233,15 +1237,15 @@ class HomeViewModel : ViewModel() {
                 title = "nine line",
                 data = MapObject.ObjectData.NineLine(
                     coordinate = Coordinate(
-                        lat = Random().nextDouble(),
-                        long = Random().nextDouble(),
-                        altitude = Random().nextDouble()
+                        lat = Random.nextDouble(),
+                        long = Random.nextDouble(),
+                        altitude = Random.nextDouble()
                     ),
-                    height = Random().nextDouble(),
-                    locationError = Random().nextDouble(),
+                    height = Random.nextDouble(),
+                    locationError = Random.nextDouble(),
                     type = "a-f-g",
-                    toc = Random().nextInt(),
-                    moa = Random().nextInt(),
+                    toc = Random.nextInt(),
+                    moa = Random.nextInt(),
                     weapons = listOf(
                         MapObject.ObjectData.NineLine.NineLineWeapon(
                             1,
@@ -1328,7 +1332,59 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    fun sendHighThroughput1Segment(gidNumber: String) = viewModelScope.launch(Dispatchers.IO) {
+        // send some high rate messages to the destination
+        val mutex = Mutex()
+        val requestList = mutableListOf<Deferred<RadioResult<DeliveryResult>?>>()
+        val numberOfRequests = Random.nextInt(10, 20)
+        var successCounter = 0
+        val deliveryTimes = mutableListOf<Long>()
+        for (x in 0..numberOfRequests) {
+            requestList.add(
+                async {
+                    var sent: RadioResult<DeliveryResult>?
+                    val time = measureTimeMillis {
+                        sent = selectedRadio.value?.send(SendToNetwork.ChatMessage(
+                            text = x.toString(),
+                            chatId = 1,
+                            chatMessageId = UUID.randomUUID().toString(),
+                            conversationId = "AXLE",
+                            conversationName = "AXLE",
+                            commandMetaData = CommandMetaData(
+                                messageType = GTMessageType.PRIVATE, destinationGid = gidNumber.toLong(), isPeriodic = false, senderGid = selectedRadio.value?.personalGid ?: 0
+                            ),
+                            commandHeader = GotennaHeaderWrapper(
+                                messageTypeWrapper = MessageTypeWrapper.CHAT_MESSAGE,
+                                recipientUUID = UUID.randomUUID().toString(),
+                                senderGid = selectedRadio.value?.personalGid ?: 0,
+                                senderUUID = UUID.randomUUID().toString(),
+                                senderCallsign = "test",
+                                encryptionParameters = null,
+                                uuid = UUID.randomUUID().toString()
+                            ),
+                        ))
+                        if (sent?.executedOrNull() is DeliveryResult.DeliveryCompleted) {
+                            mutex.withLock {
+                                successCounter++
+                            }
+                        }
+                    }
+                    mutex.withLock {
+                        deliveryTimes.add(time)
+                    }
+                    sent
+                }
+            )
+        }
+        val totalTime = measureTimeMillis {
+            requestList.awaitAll()
+        }
+        println("send lots of grip: total requests: ${requestList.size}, successful: $successCounter successrate: ${(successCounter.toDouble() / requestList.size.toDouble()) * 100}% average time in ms: ${deliveryTimes.average()} total time in ms: $totalTime")
+        logOutput.update { it + "total requests: ${requestList.size}, successful: $successCounter successrate: ${(successCounter/requestList.size) * 100}% average time in ms: ${deliveryTimes.average()} total time in ms: $totalTime\n" }
+    }
+
     fun sendFile(gidNumber: String, file: File) = viewModelScope.launch(Dispatchers.IO) {
+//        sendHighThroughput1Segment(gidNumber)
         if (gidNumber.isBlank()) {
             return@launch
         }
