@@ -331,7 +331,7 @@ fun DetailScreen(
             onSetTargetGid = onSetTargetGid,
             sendGroupInvite = sendGroupInvite,
             sendGroupChat = sendGroupChat,
-            navigateToVoice = navigateToVoice
+            navigateToComms = navigateToVoice
         )
 
     }

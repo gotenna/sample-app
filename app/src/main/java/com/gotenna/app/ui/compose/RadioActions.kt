@@ -115,7 +115,7 @@ fun RadioActions(
     onSetTargetGid: (Long) -> Unit,
     sendGroupInvite: (Long) -> Unit,
     sendGroupChat: () -> Unit,
-    navigateToVoice: () -> Unit
+    navigateToComms: () -> Unit
 ) {
     val context = LocalContext.current
     val gid: Long = GIDUtils.generateSerialGid(currentRadioSerial)
@@ -198,11 +198,11 @@ fun RadioActions(
             )
         }
 
-        /*item {
-            DefaultWideButton(text = "Voice communication") {
-                navigateToVoice()
+        item {
+            DefaultWideButton(text = "Comms") {
+                navigateToComms()
             }
-        }*/
+        }
 
         item {
             DefaultWideButton(text = "Send text file with grip") {
@@ -731,6 +731,6 @@ fun RadioActionsPreview() {
         onSetTargetGid = {},
         sendGroupChat = {},
         sendGroupInvite = {},
-        navigateToVoice = {}
+        navigateToComms = {}
     )
 }
