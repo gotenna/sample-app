@@ -198,11 +198,11 @@ fun RadioActions(
             )
         }
 
-        item {
+        /*item {
             DefaultWideButton(text = "Voice communication") {
                 navigateToVoice()
             }
-        }
+        }*/
 
         item {
             DefaultWideButton(text = "Send text file with grip") {

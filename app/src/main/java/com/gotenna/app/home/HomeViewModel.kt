@@ -1383,44 +1383,53 @@ class HomeViewModel : ViewModel() {
         logOutput.update { it + "total requests: ${requestList.size}, successful: $successCounter successrate: ${(successCounter/requestList.size) * 100}% average time in ms: ${deliveryTimes.average()} total time in ms: $totalTime\n" }
     }
 
-    fun sendFile(gidNumber: String, file: File) = viewModelScope.launch(Dispatchers.IO) {
-//        sendHighThroughput1Segment(gidNumber)
-        if (gidNumber.isBlank()) {
-            return@launch
-        }
+    private var fileJob: Job? = null
 
-        gripFile.update { null }
-        val inputStream = file.inputStream()
-        val content = ByteArray(file.length().toInt())
-        inputStream.read(content)
-        inputStream.close()
-        val result = selectedRadio.value?.send(
-            SendToNetwork.GripFile(
-                data = content,
-                fileName = file.name,
-                partialData = false,
-                numberOfSegments = 0,
-                commandMetaData = CommandMetaData(
-                    messageType = GTMessageType.PRIVATE,
-                    destinationGid = gidNumber.toLong(),
-                    senderGid = selectedRadio.value?.personalGid ?: 1234
-                ),
-                commandHeader = GotennaHeaderWrapper(
-                    uuid = UUID.randomUUID().toString(),
-                    senderGid = selectedRadio.value?.personalGid ?: 1234,
-                    senderCallsign = "Test",
-                    messageTypeWrapper = MessageTypeWrapper.GRIP_FILE,
-                    appCode = 123,
-                ),
-            )
-        )
-        val output = if (result?.isSuccess() == true) {
-            "Success send grip file returned data is ${result.executedOrNull()}\n\n"
+    fun sendFile(gidNumber: String, file: File) {
+        println("file job is active: ${fileJob?.isActive}")
+        if (fileJob?.isActive == true) {
+            fileJob?.cancel()
         } else {
-            "Failure send grip file returned data is ${result?.getErrorOrNull()}\n\n"
-        }
+            fileJob = viewModelScope.launch(Dispatchers.IO) {
+//        sendHighThroughput1Segment(gidNumber)
+                if (gidNumber.isBlank()) {
+                    return@launch
+                }
 
-        logOutput.update { it + output }
+                gripFile.update { null }
+                val inputStream = file.inputStream()
+                val content = ByteArray(file.length().toInt())
+                inputStream.read(content)
+                inputStream.close()
+                val result = selectedRadio.value?.send(
+                    SendToNetwork.GripFile(
+                        data = content,
+                        fileName = file.name,
+                        partialData = false,
+                        numberOfSegments = 0,
+                        commandMetaData = CommandMetaData(
+                            messageType = GTMessageType.PRIVATE,
+                            destinationGid = gidNumber.toLong(),
+                            senderGid = selectedRadio.value?.personalGid ?: 1234
+                        ),
+                        commandHeader = GotennaHeaderWrapper(
+                            uuid = UUID.randomUUID().toString(),
+                            senderGid = selectedRadio.value?.personalGid ?: 1234,
+                            senderCallsign = "Test",
+                            messageTypeWrapper = MessageTypeWrapper.GRIP_FILE,
+                            appCode = 123,
+                        ),
+                    )
+                )
+                val output = if (result?.isSuccess() == true) {
+                    "Success send grip file returned data is ${result.executedOrNull()}\n\n"
+                } else {
+                    "Failure send grip file returned data is ${result?.getErrorOrNull()}\n\n"
+                }
+
+                logOutput.update { it + output }
+            }
+        }
     }
 
     fun setNetworkMacMode(networkMacMode: Int, backPressure: Int, backOffMethod: Int) = viewModelScope.launch(Dispatchers.IO) {
