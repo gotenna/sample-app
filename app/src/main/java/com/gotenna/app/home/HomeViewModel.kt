@@ -1336,7 +1336,7 @@ class HomeViewModel : ViewModel() {
         // send some high rate messages to the destination
         val mutex = Mutex()
         val requestList = mutableListOf<Deferred<RadioResult<DeliveryResult>?>>()
-        val numberOfRequests = Random.nextInt(10, 20)
+        val numberOfRequests = Random.nextInt(1, 10)
         var successCounter = 0
         val deliveryTimes = mutableListOf<Long>()
         for (x in 0..numberOfRequests) {
@@ -1395,39 +1395,47 @@ class HomeViewModel : ViewModel() {
                 if (gidNumber.isBlank()) {
                     return@launch
                 }
+                launch {
 
-                gripFile.update { null }
-                val inputStream = file.inputStream()
-                val content = ByteArray(file.length().toInt())
-                inputStream.read(content)
-                inputStream.close()
-                val result = selectedRadio.value?.send(
-                    SendToNetwork.GripFile(
-                        data = content,
-                        fileName = file.name,
-                        partialData = false,
-                        numberOfSegments = 0,
-                        commandMetaData = CommandMetaData(
-                            messageType = GTMessageType.PRIVATE,
-                            destinationGid = gidNumber.toLong(),
-                            senderGid = selectedRadio.value?.personalGid ?: 1234
-                        ),
-                        commandHeader = GotennaHeaderWrapper(
-                            uuid = UUID.randomUUID().toString(),
-                            senderGid = selectedRadio.value?.personalGid ?: 1234,
-                            senderCallsign = "Test",
-                            messageTypeWrapper = MessageTypeWrapper.GRIP_FILE,
-                            appCode = 123,
-                        ),
+
+                    gripFile.update { null }
+                    val inputStream = file.inputStream()
+                    val content = ByteArray(file.length().toInt())
+                    inputStream.read(content)
+                    inputStream.close()
+                    val result = selectedRadio.value?.send(
+                        SendToNetwork.GripFile(
+                            data = content,
+                            fileName = file.name,
+                            partialData = false,
+                            numberOfSegments = 0,
+                            commandMetaData = CommandMetaData(
+                                messageType = GTMessageType.PRIVATE,
+                                destinationGid = gidNumber.toLong(),
+                                senderGid = selectedRadio.value?.personalGid ?: 1234
+                            ),
+                            commandHeader = GotennaHeaderWrapper(
+                                uuid = UUID.randomUUID().toString(),
+                                senderGid = selectedRadio.value?.personalGid ?: 1234,
+                                senderCallsign = "Test",
+                                messageTypeWrapper = MessageTypeWrapper.GRIP_FILE,
+                                appCode = 123,
+                            ),
+                        )
                     )
-                )
-                val output = if (result?.isSuccess() == true) {
-                    "Success send grip file returned data is ${result.executedOrNull()}\n\n"
-                } else {
-                    "Failure send grip file returned data is ${result?.getErrorOrNull()}\n\n"
-                }
+                    val output = if (result?.isSuccess() == true) {
+                        "Success send grip file returned data is ${result.executedOrNull()}\n\n"
+                    } else {
+                        "Failure send grip file returned data is ${result?.getErrorOrNull()}\n\n"
+                    }
 
-                logOutput.update { it + output }
+                    logOutput.update { it + output }
+                }
+                // testing sending 1 segment messages while file transfer is ongoing
+                /*launch {
+                    sendHighThroughput1Segment(gidNumber)
+                }*/
+
             }
         }
     }
