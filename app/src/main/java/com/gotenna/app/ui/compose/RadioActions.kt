@@ -652,6 +652,30 @@ fun RadioActions(
         }
 
         item {
+            DefaultWideButton(text = "Set over-water frequencies") {
+                onSetFrequencyChannels(
+                    listOf(
+                        GTFrequencyChannel(448.000, true),
+                        GTFrequencyChannel(458.000, true),
+                        GTFrequencyChannel(468.000, true),
+                        GTFrequencyChannel(450.000, false),
+                        GTFrequencyChannel(452.000, false),
+                        GTFrequencyChannel(454.000, false),
+                        GTFrequencyChannel(456.000, false),
+                        GTFrequencyChannel(460.000, false),
+                        GTFrequencyChannel(462.000, false),
+                        GTFrequencyChannel(464.000, false),
+                        GTFrequencyChannel(466.000, false),
+                        GTFrequencyChannel(470.000, false),
+                        GTFrequencyChannel(472.000, false),
+                        GTFrequencyChannel(474.000, false),
+                        GTFrequencyChannel(476.000, false),
+                    )
+                )
+            }
+        }
+
+        item {
             DefaultWideButton(text = R.string.get_frequency_action) {
                 onGetFrequencyChannels()
             }
