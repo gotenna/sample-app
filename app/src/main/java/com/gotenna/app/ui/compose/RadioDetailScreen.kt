@@ -186,6 +186,9 @@ fun DetailScreen(
         },
         navigateToVoice = {
             navigateToVoice()
+        },
+        onSendGripFile = { file, gid ->
+            viewModel.sendFile(gid, file)
         }
     )
 }
@@ -234,7 +237,8 @@ fun DetailScreen(
     onSetTargetGid: (Long) -> Unit,
     sendGroupInvite: (Long) -> Unit,
     sendGroupChat: () -> Unit,
-    navigateToVoice: () -> Unit
+    navigateToVoice: () -> Unit,
+    onSendGripFile: (File, String) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -331,7 +335,8 @@ fun DetailScreen(
             onSetTargetGid = onSetTargetGid,
             sendGroupInvite = sendGroupInvite,
             sendGroupChat = sendGroupChat,
-            navigateToComms = navigateToVoice
+            navigateToComms = navigateToVoice,
+            onSendGripFile = onSendGripFile
         )
 
     }
@@ -383,6 +388,7 @@ fun DetailScreenPreview() {
         onSetTargetGid = {},
         sendGroupInvite = {},
         sendGroupChat = {},
-        navigateToVoice = {}
+        navigateToVoice = {},
+        onSendGripFile = { _, _ -> }
     )
 }

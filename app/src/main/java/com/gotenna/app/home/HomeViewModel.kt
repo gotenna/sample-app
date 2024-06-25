@@ -149,17 +149,8 @@ class HomeViewModel : ViewModel() {
                                         }
                                     }
                                     is SendToNetwork.GripFile -> {
-                                        when (executed.gripResult) {
-                                            is GripResult.GripFullData -> {
-                                                logOutput.update {
-                                                    it + "Grip full file delivered: ${Date()}\ndata: ${executed.gripResult}\n"
-                                                }
-                                            }
-                                            else -> {
-                                                logOutput.update {
-                                                    it + "Grip full file delivered: ${Date()}\ndata: ${executed.gripResult}\n"
-                                                }
-                                            }
+                                        logOutput.update {
+                                            it + "Grip file delivered: ${Date()}\ndata: ${executed}\n"
                                         }
                                     }
                                     is SendToNetwork.Group -> {
@@ -451,29 +442,17 @@ class HomeViewModel : ViewModel() {
 
     fun sendLocation(privateMessage: Boolean, gidNumber: String = "0", radio: RadioModel? = null) = viewModelScope.launch(Dispatchers.IO) {
         val data = SendToNetwork.Location(
-            how = "m-g",
-            staleTime = 300,
-            lat = 28.375301,
-            long = -81.549396,
-            altitude = 10000.0,
-            team = "WHITE",
-            accuracy = 13,
-            creationTime = Date().toInstant().toEpochMilli(),
-            commandMetaData = CommandMetaData(
-                messageType = if (privateMessage) GTMessageType.PRIVATE else GTMessageType.BROADCAST,
-                destinationGid = gidNumber.toLong(),
-                senderGid = radioModels.firstOrNull()?.firstOrNull()?.personalGid ?: 123
-            ),
-            commandHeader = GotennaHeaderWrapper(
-                uuid = UUID.randomUUID().toString(),
-                senderGid = radioModels.firstOrNull()?.firstOrNull()?.personalGid ?: 1234,
-                senderCallsign = "Test",
-                messageTypeWrapper = MessageTypeWrapper.LOCATION,
-                appCode = 123,
-                senderUUID = "ANDROID-253d2e0c5acb0ef5",
-                recipientUUID = UUID.randomUUID().toString(),
-                encryptionParameters = null
-            ),
+            how = "h-e",
+            staleTime = 60,
+            lat = 35.291802,
+            long = 80.846604,
+            altitude = 237.21325546763973,
+            team = "CYAN",
+            accuracy = 11,
+            creationTime = 1718745135755,
+            messageId = 0,
+            commandMetaData = CommandMetaData(messageType=GTMessageType.BROADCAST, destinationGid=0, isPeriodic=false, priority=GTMessagePriority.NORMAL, senderGid=904610228241489),
+            commandHeader = GotennaHeaderWrapper(timeStamp=1718745135761, messageTypeWrapper= MessageTypeWrapper.LOCATION, appCode=0, senderGid=904610228241489, senderUUID="ANDROID-2440142b8ac6d5d7", senderCallsign="JONAS", encryptionParameters=null),
         )
 //            val byteData = Integer.valueOf(data.bytes.copyOfRange(3, 4).toHexString(), 16)
 
