@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -61,6 +63,7 @@ fun DetailScreen(
     val radios by viewModel.radioModels.collectAsState()
     val isUpdatingFirmware by viewModel.isUpdatingFirmware.collectAsState()
     val context = LocalContext.current
+
     DisposableEffect(Unit) {
         val window = context.findActivity()?.window
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -242,6 +245,8 @@ fun DetailScreen(
 ) {
     val context = LocalContext.current
 
+    val showFrequencyDialog = remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -321,6 +326,9 @@ fun DetailScreen(
             onSetPowerAndBandwidth = onSetPowerAndBandwidth,
             onGetPowerAndBandwidth = onGetPowerAndBandwidth,
             onSetFrequencyChannels = onSetFrequencyChannels,
+            onSetFrequencyChannelsAdvanced = {
+                showFrequencyDialog.value = true
+            },
             onGetFrequencyChannels = onGetFrequencyChannels,
             onSetOperationMode = onSetOperationMode,
             onGetDeviceInfo = onGetDeviceInfo,
@@ -339,6 +347,19 @@ fun DetailScreen(
             onSendGripFile = onSendGripFile
         )
 
+    }
+
+    if (showFrequencyDialog.value) {
+        AdvancedFrequencyDialog(
+            onDismissRequest = {
+                showFrequencyDialog.value = false
+            },
+            onConfirmation = { channels ->
+                showFrequencyDialog.value = false
+                onSetFrequencyChannels(channels)
+            },
+            dialogTitle = "Advanced Frequency Channels",
+        )
     }
 }
 

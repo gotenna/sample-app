@@ -24,7 +24,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.core.net.toFile
 import com.gotenna.app.MainApplication
 import com.gotenna.app.R
 import com.gotenna.app.ui.*
@@ -131,6 +130,7 @@ fun RadioActions(
     onSetPowerAndBandwidth: (GTPowerLevel, GTBandwidth) -> Unit,
     onGetPowerAndBandwidth: () -> Unit,
     onSetFrequencyChannels: (List<GTFrequencyChannel>) -> Unit,
+    onSetFrequencyChannelsAdvanced: () -> Unit,
     onGetFrequencyChannels: () -> Unit,
     onSetOperationMode: (Properties.GTOperationMode) -> Unit,
     onGetDeviceInfo: () -> Unit,
@@ -652,6 +652,11 @@ fun RadioActions(
         }
 
         item {
+            DefaultWideButton(text = "Set Frequency (Advanced)") {
+                onSetFrequencyChannelsAdvanced()
+            }
+        }
+        item {
             DefaultWideButton(text = "Set over-water frequencies") {
                 onSetFrequencyChannels(
                     listOf(
@@ -802,6 +807,7 @@ fun RadioActionsPreview() {
         onSetPowerAndBandwidth = { _, _ -> },
         onGetPowerAndBandwidth = {},
         onSetFrequencyChannels = {},
+        onSetFrequencyChannelsAdvanced = {},
         onGetFrequencyChannels = {},
         onSetOperationMode = {},
         onGetDeviceInfo = {},
