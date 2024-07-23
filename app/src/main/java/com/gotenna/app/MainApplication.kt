@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 class MainApplication : Application() {
     companion object {
         const val SDK_TOKEN = BuildConfig.SDK_TOKEN
+        const val APP_ID = BuildConfig.APP_ID
     }
 
     private val backgroundScope = CoroutineScope(Dispatchers.Default)
@@ -28,6 +29,6 @@ class MainApplication : Application() {
     }
 
     private fun initGotennaClient() = backgroundScope.launch {
-        GotennaClient.initialize(applicationContext, SDK_TOKEN, preProcessAction = null, postProcessAction = null)
+        GotennaClient.initialize(context = applicationContext, sdkToken = SDK_TOKEN, appId = APP_ID, preProcessAction = null, postProcessAction = null)
     }
 }
