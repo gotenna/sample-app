@@ -11,8 +11,9 @@ artifactory.user=email
 artifactory.password=xyz
 ```
 
-The file must contain the `sdk.token` provided by goTenna.
+The file must contain the `sdk.token` and `sdk.appid` provided by goTenna.
 
 ```
 sdk.token=
+sdk.appid=
 ```
