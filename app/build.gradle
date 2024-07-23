@@ -9,6 +9,12 @@ def sdkToken() {
     return properties.getProperty("sdk.token");
 }
 
+def appId() {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    return properties.getProperty("sdk.appid");
+}
+
 android {
     compileSdk 33
 
@@ -21,6 +27,7 @@ android {
 
         // For SDK Token.
         buildConfigField "String", "SDK_TOKEN", "\""+sdkToken()+"\""
+        buildConfigField "String", "APP_ID", "\""+appId()+"\""
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         missingDimensionStrategy 'visibility', 'internal'
