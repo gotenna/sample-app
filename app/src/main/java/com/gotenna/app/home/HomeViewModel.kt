@@ -110,6 +110,9 @@ class HomeViewModel : ViewModel() {
 
     private lateinit var updateFirmwareJob: Job
 
+    private var observeStateJob: Job? = null
+    private var observeMessageJob: Job? = null
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -126,7 +129,8 @@ class HomeViewModel : ViewModel() {
                     // For each connected radio observe their connection state.
                     radios.forEach { radio ->
                         logOutput.update { it + "Device: ${radio.serialNumber} gid: ${radio.personalGid}\n\n" }
-                        launch {
+                        observeStateJob?.cancel()
+                        observeStateJob = launch {
                             radio.observeState().collect { state ->
                                 logOutput.update { it + "New device state is: $state for device: ${radio.serialNumber} ${Date()}\n\n" }
                             }
@@ -135,7 +139,8 @@ class HomeViewModel : ViewModel() {
                         testing()
 
                         // Observe messages from a radio.
-                        launch {
+                        observeMessageJob?.cancel()
+                        observeMessageJob = launch {
                             radio.receive.collect { command ->
                                 when (val executed = command.executedOrNull()) {
                                     null -> {
