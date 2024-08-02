@@ -192,7 +192,11 @@ fun DetailScreen(
         },
         onSendGripFile = { file, gid ->
             viewModel.sendFile(gid, file)
-        }
+        },
+        startPliJob = viewModel::startPliSending,
+        stopPliJob = viewModel::stopPliSending,
+        startGripTest = viewModel::startNodeTestRun,
+        showReceiverStats = viewModel::showReceiverStats
     )
 }
 
@@ -241,7 +245,11 @@ fun DetailScreen(
     sendGroupInvite: (Long) -> Unit,
     sendGroupChat: () -> Unit,
     navigateToVoice: () -> Unit,
-    onSendGripFile: (File, String) -> Unit
+    onSendGripFile: (File, String) -> Unit,
+    startPliJob:() -> Unit,
+    stopPliJob: () -> Unit,
+    startGripTest: () -> Unit,
+    showReceiverStats: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -344,7 +352,11 @@ fun DetailScreen(
             sendGroupInvite = sendGroupInvite,
             sendGroupChat = sendGroupChat,
             navigateToComms = navigateToVoice,
-            onSendGripFile = onSendGripFile
+            onSendGripFile = onSendGripFile,
+            startPliJob = startPliJob,
+            stopPliJob = stopPliJob,
+            startGripTest = startGripTest,
+            showReceiverStats = showReceiverStats
         )
 
     }
@@ -410,6 +422,10 @@ fun DetailScreenPreview() {
         sendGroupInvite = {},
         sendGroupChat = {},
         navigateToVoice = {},
-        onSendGripFile = { _, _ -> }
+        onSendGripFile = { _, _ -> },
+        startPliJob = {},
+        stopPliJob = {},
+        startGripTest = {},
+        showReceiverStats = {}
     )
 }

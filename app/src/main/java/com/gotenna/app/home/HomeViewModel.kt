@@ -29,6 +29,7 @@ import com.gotenna.common.models.PowerLevel
 import com.gotenna.common.models.SendToNetwork
 import com.gotenna.radio.sdk.GotennaClient
 import com.gotenna.radio.sdk.common.models.DeliveryResult
+import com.gotenna.radio.sdk.common.models.SdkError
 import com.gotenna.radio.sdk.common.models.radio.ConnectionType
 import com.gotenna.radio.sdk.common.models.radio.GidType
 import com.gotenna.radio.sdk.common.models.radio.RadioModel
@@ -50,11 +51,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -109,6 +112,20 @@ class HomeViewModel : ViewModel() {
     val isUpdatingFirmware = _isUpdatingFirmware.asStateFlow()
 
     private lateinit var updateFirmwareJob: Job
+    private val nodesInNetwork = mutableMapOf<String, Long>()
+    private val statsMap = mutableMapOf<String, MutableList<TransferStat>>()
+    data class TransferStat(
+        val sender: Boolean = false,
+        val successful: Boolean = false,
+        val newSession: Boolean = false,
+        val numberOfSegments: Int = 1,
+        val numberOfMissingSegments: Int = 0,
+        val numberOfNacks: Int = 0,
+        val averageHops: Int = 1,
+        val averageRssi: Int = -1,
+        val numberOfSentSegments: Int = 0,
+        val waitingForAck: Boolean = false
+    )
 
     private var observeStateJob: Job? = null
     private var observeMessageJob: Job? = null
@@ -126,8 +143,171 @@ class HomeViewModel : ViewModel() {
                 }
                 // TODO a stop gap for now to not recreate several jobs each time these are updated
                 if (radios.isNotEmpty()) {
+                    radios.forEach { radioModel ->
+                        launch {
+                            radioModel.receive.collect { command ->
+                                when (val executed = command.executedOrNull()) {
+                                is SendToNetwork.GripFile -> {
+                                    when (val gripResult = executed.gripResult) {
+                                        is GripResult.ReceiveFileStarted -> {
+                                            logOutput.update { it + "grip data incoming from ${gripResult.originGidHash} msgId: ${gripResult.id} with expected segments ${gripResult.expectedNumberOfSegments}\n\n" }
+                                        }
+
+                                        is GripResult.GripFullData -> {
+                                            val transferStat = TransferStat(
+                                                successful = true,
+                                                numberOfSegments = gripResult.numberOfSegments,
+                                                numberOfMissingSegments = 0,
+                                                numberOfNacks = gripResult.numberOfRetries,
+                                                averageHops = gripResult.averageHopCount,
+                                                averageRssi = gripResult.averageRssiValue
+                                            )
+                                            logOutput.update { it + "grip full file msgId: ${gripResult.id}\n" }
+                                            println("RECEIVER: delivery success for ${gripResult.id}")
+                                            if (statsMap.containsKey(executed.commandHeader.senderCallsign)) {
+                                                statsMap[executed.commandHeader.senderCallsign]!!.add(
+                                                    transferStat
+                                                )
+                                            } else {
+                                                statsMap[executed.commandHeader.senderCallsign] =
+                                                    mutableListOf(transferStat)
+                                            }
+                                        }
+
+                                        is GripResult.UnsuccessfulPartialData -> {
+                                            val transferStat = TransferStat(
+                                                successful = false,
+                                                numberOfSegments = gripResult.numberOfSegmentsReceived + gripResult.missingSegments,
+                                                numberOfMissingSegments = gripResult.missingSegments,
+                                                numberOfNacks = gripResult.numberOfRetries,
+                                                averageHops = gripResult.averageHopCount,
+                                                averageRssi = gripResult.averageRssiValue
+                                            )
+                                            logOutput.update { it + "grip unsuccessful file msgId: ${gripResult.id}\n" }
+                                            println("RECEIVER: delivery failure for ${gripResult.id}")
+                                            if (statsMap.containsKey(executed.commandHeader.senderCallsign)) {
+                                                statsMap[executed.commandHeader.senderCallsign]!!.add(
+                                                    transferStat
+                                                )
+                                            } else {
+                                                statsMap[executed.commandHeader.senderCallsign] =
+                                                    mutableListOf(transferStat)
+                                            }
+                                        }
+
+                                        is GripResult.PartiallyAssembledFile -> {
+                                            val transferStat = TransferStat(
+                                                successful = false,
+                                                numberOfSegments = gripResult.numberOfSegments + gripResult.numberOfMissingSegments,
+                                                numberOfMissingSegments = gripResult.numberOfMissingSegments,
+                                                numberOfNacks = gripResult.numberOfRetries,
+                                                averageHops = gripResult.averageHopCount,
+                                                averageRssi = gripResult.averageRssiValue
+                                            )
+                                            logOutput.update { it + "grip partial file msgId: ${gripResult.id}\n" }
+                                            println("RECEIVER: delivery failure for ${gripResult.id}")
+                                            if (statsMap.containsKey(executed.commandHeader.senderCallsign)) {
+                                                statsMap[executed.commandHeader.senderCallsign]!!.add(
+                                                    transferStat
+                                                )
+                                            } else {
+                                                statsMap[executed.commandHeader.senderCallsign] =
+                                                    mutableListOf(transferStat)
+                                            }
+                                        }
+
+                                        else -> {
+                                        }
+                                    }
+                                }
+                                is SendToRadio.DeviceInfo -> {
+                                    logOutput.update { it + "Device Info: battery level: ${executed.batteryLevel} charging: ${executed.batteryCharging} system temp: ${executed.systemTemperature} power amp temp ${executed.powerAmpTemperature}\n\n" }
+                                }
+                                is SendToNetwork.Location -> {
+                                    // save the radio's callsign and gid
+                                    if (!nodesInNetwork.containsKey(executed.commandHeader.senderCallsign)) {
+                                        logOutput.update { it + "Adding ${executed.commandHeader.senderCallsign} to grip test tracking ${(executed.gripResult as GripResult.GripFullData).averageHopCount} hops away\n" }
+                                        nodesInNetwork[executed.commandHeader.senderCallsign] =
+                                            executed.commandHeader.senderGid
+                                    }
+                                }
+                                is SendToNetwork.AnyNetworkMessage -> {
+                                    when (val gripResult = executed.gripResult) {
+                                        is GripResult.PartiallyAssembledFile -> {
+                                            val transferStat = TransferStat(
+                                                successful = true,
+                                                numberOfSegments = gripResult.numberOfSegments + gripResult.numberOfMissingSegments,
+                                                numberOfMissingSegments = gripResult.numberOfMissingSegments,
+                                                numberOfNacks = gripResult.numberOfRetries,
+                                                averageHops = gripResult.averageHopCount,
+                                                averageRssi = gripResult.averageRssiValue
+                                            )
+                                            if (statsMap.containsKey(executed.commandHeader.senderCallsign)) {
+                                                statsMap[executed.commandHeader.senderCallsign]!!.add(
+                                                    transferStat
+                                                )
+                                            } else {
+                                                statsMap[executed.commandHeader.senderCallsign] =
+                                                    mutableListOf(transferStat)
+                                            }
+                                        }
+
+                                        else -> {
+                                            logOutput.update { it + "grip type: ${gripResult::class.java.simpleName}\n" }
+                                        }
+                                    }
+                                }
+                            }
+                            when (val error = command.getErrorOrNull()) {
+                                is SdkError.GripPartialFileDelivered -> {
+                                    if (error.gripResult is GripResult.UnsuccessfulPartialData) {
+                                        val gripResult =
+                                            (command.getErrorOrNull() as SdkError.GripPartialFileDelivered).gripResult as GripResult.UnsuccessfulPartialData
+                                        logOutput.update { it + "grip partial file error for msgId: ${gripResult.id}\n" }
+                                        println("RECEIVER: delivery failed for ${gripResult.id}")
+                                        val transferStat = TransferStat(
+                                            successful = false,
+                                            numberOfSegments = gripResult.numberOfSegmentsReceived + gripResult.missingSegments,
+                                            numberOfMissingSegments = gripResult.missingSegments,
+                                            numberOfNacks = gripResult.numberOfRetries,
+                                            averageHops = gripResult.averageHopCount,
+                                            averageRssi = gripResult.averageRssiValue,
+                                            newSession = true
+                                        )
+                                        if (statsMap.containsKey(gripResult.originGid.toString())) {
+                                            statsMap[gripResult.originGid.toString()]!!.add(
+                                                transferStat
+                                            )
+                                        } else {
+                                            statsMap[gripResult.originGid.toString()] =
+                                                mutableListOf(transferStat)
+                                        }
+                                    }
+                                }
+
+                                is SdkError.GripFileNotFound -> {
+                                    val gripResult =
+                                        (command.getErrorOrNull() as SdkError.GripPartialFileDelivered).gripResult as GripResult.UntrackedTransfer
+                                    logOutput.update { it + "grip file not found\n" }
+                                    println("RECEIVER: delivery failed for ${gripResult.id}")
+                                    val transferStat = TransferStat(
+                                        successful = false,
+                                        numberOfSegments = 0,
+                                        numberOfMissingSegments = 0,
+                                        numberOfNacks = 0,
+                                        averageHops = gripResult.averageHopCount,
+                                        averageRssi = gripResult.averageRssiValue
+                                    )
+                                    if (statsMap.containsKey("untracked")) {
+                                        statsMap["untracked"]!!.add(transferStat)
+                                    } else {
+                                        statsMap["untracked"] = mutableListOf(transferStat)
+                                    }
+                                }
+                            }
+                        }
                     // For each connected radio observe their connection state.
-                    radios.forEach { radio ->
+                    /*radios.forEach { radio ->
                         logOutput.update { it + "Device: ${radio.serialNumber} gid: ${radio.personalGid}\n\n" }
                         observeStateJob?.cancel()
                         observeStateJob = launch {
@@ -188,7 +368,7 @@ class HomeViewModel : ViewModel() {
                                         logOutput.update { it + "Incoming command for device: ${radio.serialNumber} is success: ${command.executedOrNull()}\n\n" }
                                     }
                                 }
-                            }
+                            }*/
                         }
                     }
                 }
@@ -1574,5 +1754,203 @@ class HomeViewModel : ViewModel() {
             "Failed to set the group message error: ${result?.getErrorOrNull()}\n\n"
         }
         logOutput.update { it + output }
+    }
+    private var pliJob: Job? = null
+    fun startPliSending() {
+        if (pliJob?.isActive != true) {
+            pliJob = viewModelScope.launch(Dispatchers.IO) {
+                while (isActive) {
+                    selectedRadio.value?.send(
+                        SendToNetwork.Location(
+                            how = "h-e",
+                            staleTime = 60,
+                            lat = 35.291802,
+                            long = 80.846604,
+                            altitude = 237.21325546763973,
+                            team = "CYAN",
+                            accuracy = 11,
+                            creationTime = 1718745135755,
+                            messageId = 0,
+                            commandMetaData = CommandMetaData(
+                                messageType = GTMessageType.BROADCAST,
+                                destinationGid = 0,
+                                isPeriodic = false,
+                                priority = GTMessagePriority.NORMAL,
+                                senderGid = selectedRadio.value?.personalGid ?: 0
+                            ),
+                            commandHeader = GotennaHeaderWrapper(
+                                messageTypeWrapper = MessageTypeWrapper.LOCATION,
+                                senderGid = selectedRadio.value?.personalGid ?: 0,
+                                senderUUID = "ANDROID-2440142b8ac6d5d7",
+                                senderCallsign = "${selectedRadio.value?.serialNumber}",
+                            ),
+                        )
+                    )
+                    delay(60000)
+                }
+            }
+        } else {
+            pliJob?.cancel()
+            startPliSending()
+        }
+    }
+
+    fun stopPliSending() {
+        pliJob?.cancel()
+    }
+    private var testJob: Job? = null
+    fun startNodeTestRun() {
+        testJob?.cancel()
+        testJob = viewModelScope.launch(Dispatchers.IO) {
+            val testRunSize = 100
+            val size = 155
+            logOutput.update { it + "starting grip test run to ${nodesInNetwork.size} nodes with $size bytes file running $testRunSize times\n\n" }
+            statsMap.clear()
+            val time = measureTimeMillis {
+                for (i in 1..testRunSize) {
+                    val testFileData = Random.nextBytes(size)
+                    nodesInNetwork.forEach { (serial, destination) ->
+                        val test = SendToNetwork.GripFile(
+                            data = testFileData,
+                            fileName = "test_file_${size}_bytes.txt",
+                            partialData = false,
+                            numberOfSegments = 0,
+                            senderGid = selectedRadio.value?.personalGid ?: 0,
+                            commandMetaData = CommandMetaData(
+                                messageType = GTMessageType.BROADCAST,
+                                destinationGid = destination,
+                                senderGid = selectedRadio.value?.personalGid ?: 0
+                            ),
+                            commandHeader = GotennaHeaderWrapper(
+                                messageTypeWrapper = MessageTypeWrapper.GRIP_FILE,
+                                recipientUUID = UUID.randomUUID().toString(),
+                                senderGid = selectedRadio.value?.personalGid ?: 0,
+                                senderUUID = UUID.randomUUID().toString(),
+                                senderCallsign = "${selectedRadio.value?.serialNumber}",
+                            )
+                        )
+                        if (i % 10 == 0) {
+                            logOutput.update { it + "Starting run $i for device $serial" }
+                        }
+                        val sendResult = selectedRadio.value?.send(test)
+                        val stat = when (val transfer = sendResult?.executedOrNull()) {
+                            is DeliveryResult.DeliveryCompleted -> {
+                                logOutput.update { it + "transfer marked complete for msgId: ${(transfer.gripResult as GripResult.DeliverySuccess).id}\n\n" }
+                                println("SENDER: delivery completed for ${transfer.gripResult}")
+                                TransferStat(
+                                    sender = true,
+                                    successful = sendResult.isSuccess(),
+                                    numberOfSegments = (transfer.gripResult as GripResult.DeliverySuccess).numberOfSegments,
+                                    numberOfMissingSegments = -1,
+                                    numberOfNacks = (transfer.gripResult as GripResult.DeliverySuccess).numberOfRetries,
+                                    averageHops = -1,
+                                    averageRssi = -1
+                                )
+                            }
+                            is DeliveryResult.DeliveryCanceled -> {
+                                logOutput.update { it + "transfer marked cancelled for msgId: ${(transfer.gripResult as GripResult.DeliverySuccess).id}\n\n" }
+                                println("SENDER: delivery cancelled for ${transfer.gripResult}")
+                                TransferStat(
+                                    sender = true,
+                                    successful = false,
+                                    numberOfSegments = (transfer.gripResult as GripResult.DeliveryCancel).numberOfSegments,
+                                    numberOfMissingSegments = -1,
+                                    numberOfNacks = (transfer.gripResult as GripResult.DeliveryCancel).numberOfRetries,
+                                    averageHops = -1,
+                                    averageRssi = -1,
+                                    waitingForAck = (transfer.gripResult as GripResult.DeliveryCancel).waitingForAck,
+                                    numberOfSentSegments = (transfer.gripResult as GripResult.DeliveryCancel).sentSegments
+                                )
+                            }
+                            else -> {
+                                if (sendResult?.getErrorOrNull() is SdkError.FailedToDeliver) {
+                                    logOutput.update { it + "Failed to deliver when sending to $serial msgId: ${((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).id}\n\n" }
+                                    println("SENDER: delivery cancelled for ${sendResult.getErrorOrNull()}")
+                                    TransferStat(
+                                        sender = true,
+                                        successful = false,
+                                        numberOfSegments = ((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).numberOfSegments,
+                                        numberOfMissingSegments = 0,
+                                        numberOfNacks = ((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).numberOfRetries,
+                                        averageHops = -1,
+                                        averageRssi = -1,
+                                        waitingForAck = ((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).waitingForAck,
+                                        numberOfSentSegments = ((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).sentSegments
+                                    )
+                                } else {
+                                    logOutput.update { it + "Failed to deliver when sending to $serial ${sendResult?.getErrorOrNull()}\n\n" }
+                                    println("SENDER: delivery cancelled for ${sendResult?.getErrorOrNull()}")
+                                    TransferStat(
+                                        sender = true,
+                                        successful = false,
+                                        numberOfSegments = 0,
+                                        numberOfMissingSegments = 0,
+                                        numberOfNacks = 0,
+                                        averageHops = -1,
+                                        averageRssi = -1
+                                    )
+                                }
+                            }
+                        }
+
+                        if (statsMap.containsKey(serial)) {
+                            statsMap[serial]!!.add(stat)
+                        } else {
+                            statsMap[serial] = mutableListOf(stat)
+                        }
+                    }
+
+                }
+            }
+
+
+            var output = "Test run completed in ${time/1000}s: \n"
+            statsMap.forEach { serial, statList ->
+                output += "$serial -> "
+                val successfulDeliveryPercent = (statList.count { it.successful }.toDouble() / (statList.size).toDouble()) * 100
+                output += "successful delivery rate ${successfulDeliveryPercent}%\n"
+                var nackPercent = 0.0
+                statList.forEach {
+                    nackPercent += it.numberOfNacks.toDouble()
+                }
+                output += "average nack percentage ${nackPercent / statList.sumOf { it.numberOfSegments }}%\n"
+                val averageSentSegments = (statList.sumOf { it.numberOfSentSegments }.toDouble() / statList.sumOf { it.numberOfSegments }) * 100
+                output += "average percentage of segments sent ${100 - averageSentSegments}%\n"
+                val waitingForAcks = statList.count { it.waitingForAck }
+                output += "number of times cancelled because waiting for ack from receiver $waitingForAcks\n\n"
+            }
+            logOutput.update { it + output }
+        }
+    }
+
+    fun showReceiverStats() {
+        viewModelScope.launch(Dispatchers.IO) {
+            var output = "Result data:\n"
+            statsMap.forEach { serial, statList ->
+                output += "$serial -> "
+                val successfulDeliveryPercent = (statList.count { it.successful }.toDouble() / (statList.size).toDouble()) * 100
+                output += "successful delivery rate ${successfulDeliveryPercent}% of ${statList.size} transfers\n"
+                var nackPercent = 0.0
+                var deliveryCompleteRate = 0.0
+                var averageHops = 0.0
+                var averageRssi = 0.0
+                var totalSegments = 0
+                statList.forEach {
+                    nackPercent += it.numberOfNacks
+                    deliveryCompleteRate += (it.numberOfMissingSegments.toDouble() / it.numberOfSegments.toDouble()) * 100
+                    averageHops += it.averageHops
+                    averageRssi += it.averageRssi
+                    totalSegments += it.numberOfSegments
+                }
+                output += "number of segments expected $totalSegments\n"
+                output += "average number of nacks sent per file transfer ${nackPercent / statList.size}\n"
+                output += "average amount of file data that delivered ${100 - (deliveryCompleteRate / statList.size)}%\n"
+                output += "average hops ${averageHops / (statList.size)}\n"
+                output += "number of times sender started a new session ${statList.count { it.newSession }}"
+                output += "average rssi ${averageRssi / (statList.size)}\n\n"
+            }
+            logOutput.update { it + output }
+//            statsMap.clear()
+        }
     }
 }

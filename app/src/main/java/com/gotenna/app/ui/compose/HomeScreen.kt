@@ -233,7 +233,7 @@ fun RadioItem(
                 }
             }
 
-            SimpleText(text = radio.serialNumber, color = Gray, fontSize = Normal)
+            SimpleText(text = "serial ${radio.serialNumber} address ${radio.address}", color = Gray, fontSize = Normal)
         }
 
         if (!isConnected) {

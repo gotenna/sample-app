@@ -144,7 +144,11 @@ fun RadioActions(
     sendGroupInvite: (Long) -> Unit,
     sendGroupChat: () -> Unit,
     navigateToComms: () -> Unit,
-    onSendGripFile: (File, String) -> Unit
+    onSendGripFile: (File, String) -> Unit,
+    startPliJob:() -> Unit,
+    stopPliJob: () -> Unit,
+    startGripTest: () -> Unit,
+    showReceiverStats: () -> Unit
 ) {
     val context = LocalContext.current
     val gid: Long = GIDUtils.generateSerialGid(currentRadioSerial)
@@ -273,6 +277,30 @@ fun RadioActions(
                         setType("*/*")
                     }
                 gripFileLauncher.launch(intent)
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Start pli") {
+                startPliJob()
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Stop pli") {
+                stopPliJob()
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Start grip test") {
+                startGripTest()
+            }
+        }
+
+        item {
+            DefaultWideButton(text = "Show receiver stats") {
+                showReceiverStats()
             }
         }
 
@@ -619,7 +647,7 @@ fun RadioActions(
 
         item {
             DefaultWideButton(text = R.string.set_power_action_1_7_28) {
-                onSetPowerAndBandwidth(GTPowerLevel.ONE, GTBandwidth.BANDWIDTH_7_28)
+                onSetPowerAndBandwidth(GTPowerLevel.TWO, GTBandwidth.BANDWIDTH_7_28)
             }
         }
 
@@ -822,6 +850,10 @@ fun RadioActionsPreview() {
         sendGroupChat = {},
         sendGroupInvite = {},
         navigateToComms = {},
-        onSendGripFile = { _, _ -> }
+        onSendGripFile = { _, _ -> },
+        startPliJob = {},
+        stopPliJob = {},
+        startGripTest = {},
+        showReceiverStats = {}
     )
 }
