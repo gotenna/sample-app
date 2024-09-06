@@ -28,6 +28,6 @@ class MainApplication : Application() {
     }
 
     private fun initGotennaClient() = backgroundScope.launch {
-        GotennaClient.initialize(applicationContext, SDK_TOKEN, preProcessAction = null, postProcessAction = null)
+        GotennaClient.initialize(applicationContext, SDK_TOKEN, appId = <insertappId>, preProcessAction = null, postProcessAction = null)
     }
 }
