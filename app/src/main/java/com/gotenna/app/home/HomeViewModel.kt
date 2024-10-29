@@ -63,6 +63,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.nio.charset.Charset
+import java.time.Clock
+import java.time.ZoneId
 import java.util.Date
 import java.util.UUID
 import kotlin.random.Random
@@ -221,7 +223,8 @@ class HomeViewModel : ViewModel() {
                                     }
                                 }
                                 is SendToRadio.DeviceInfo -> {
-                                    logOutput.update { it + "Device Info: battery level: ${executed.batteryLevel} charging: ${executed.batteryCharging} system temp: ${executed.systemTemperature} power amp temp ${executed.powerAmpTemperature}\n\n" }
+                                    logOutput.update { it + "Device Info: battery level: ${executed.batteryLevel} charging: ${executed.batteryCharging} system temp: ${executed.systemTemperature} power amp temp ${executed.powerAmpTemperature} ${Clock.system(
+                                        ZoneId.systemDefault()).instant().toString()}\n\n" }
                                 }
                                 is SendToNetwork.Location -> {
                                     // save the radio's callsign and gid
@@ -443,7 +446,7 @@ class HomeViewModel : ViewModel() {
     fun connectRadios() = viewModelScope.launch(Dispatchers.IO) {
         _radios.value.filter { it.isSelected }.forEach {
             launch {
-                val result = it.radioModel.connect()
+                val result = it.radioModel.connect(false)
             }
         }
     }
@@ -855,9 +858,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send group returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send group returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1020,9 +1023,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send encryption exchange returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send encryption exchange returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1072,9 +1075,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send route returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send route returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1117,9 +1120,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send circle returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send circle returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1163,9 +1166,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send shape returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send shape returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1197,9 +1200,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send chat returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send chat returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1288,9 +1291,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send vehicle returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send vehicle returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1374,9 +1377,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send casevac returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send casevac returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1459,9 +1462,9 @@ class HomeViewModel : ViewModel() {
             )
         )
         val output = if (result?.isSuccess() == true) {
-            "Success send private location returned data is ${result.executedOrNull()}\n\n"
+            "Success send 9line returned data is ${result.executedOrNull()}\n\n"
         } else {
-            "Failure send private location returned data is ${result?.getErrorOrNull()}\n\n"
+            "Failure send 9line returned data is ${result?.getErrorOrNull()}\n\n"
         }
 
         logOutput.update { it + output }
@@ -1803,35 +1806,35 @@ class HomeViewModel : ViewModel() {
         testJob?.cancel()
         testJob = viewModelScope.launch(Dispatchers.IO) {
             val testRunSize = 100
-            val size = 155
+            val size = 61
             logOutput.update { it + "starting grip test run to ${nodesInNetwork.size} nodes with $size bytes file running $testRunSize times\n\n" }
             statsMap.clear()
             val time = measureTimeMillis {
                 for (i in 1..testRunSize) {
                     val testFileData = Random.nextBytes(size)
-                    nodesInNetwork.forEach { (serial, destination) ->
+//                    nodesInNetwork.forEach { (serial, destination) ->
                         val test = SendToNetwork.GripFile(
                             data = testFileData,
-                            fileName = "test_file_${size}_bytes.txt",
+                            fileName = "",
                             partialData = false,
                             numberOfSegments = 0,
                             senderGid = selectedRadio.value?.personalGid ?: 0,
                             commandMetaData = CommandMetaData(
                                 messageType = GTMessageType.BROADCAST,
-                                destinationGid = destination,
+//                                destinationGid = destination,
                                 senderGid = selectedRadio.value?.personalGid ?: 0
                             ),
                             commandHeader = GotennaHeaderWrapper(
                                 messageTypeWrapper = MessageTypeWrapper.GRIP_FILE,
-                                recipientUUID = UUID.randomUUID().toString(),
+                                recipientUUID = "",//UUID.randomUUID().toString(),
                                 senderGid = selectedRadio.value?.personalGid ?: 0,
                                 senderUUID = UUID.randomUUID().toString(),
                                 senderCallsign = "${selectedRadio.value?.serialNumber}",
                             )
                         )
-                        if (i % 10 == 0) {
+                        /*if (i % 10 == 0) {
                             logOutput.update { it + "Starting run $i for device $serial" }
-                        }
+                        }*/
                         val sendResult = selectedRadio.value?.send(test)
                         val stat = when (val transfer = sendResult?.executedOrNull()) {
                             is DeliveryResult.DeliveryCompleted -> {
@@ -1864,7 +1867,7 @@ class HomeViewModel : ViewModel() {
                             }
                             else -> {
                                 if (sendResult?.getErrorOrNull() is SdkError.FailedToDeliver) {
-                                    logOutput.update { it + "Failed to deliver when sending to $serial msgId: ${((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).id}\n\n" }
+//                                    logOutput.update { it + "Failed to deliver when sending to $serial msgId: ${((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).id}\n\n" }
                                     println("SENDER: delivery cancelled for ${sendResult.getErrorOrNull()}")
                                     TransferStat(
                                         sender = true,
@@ -1878,7 +1881,7 @@ class HomeViewModel : ViewModel() {
                                         numberOfSentSegments = ((sendResult.getErrorOrNull() as SdkError.FailedToDeliver).gripResult as GripResult.DeliveryCancel).sentSegments
                                     )
                                 } else {
-                                    logOutput.update { it + "Failed to deliver when sending to $serial ${sendResult?.getErrorOrNull()}\n\n" }
+//                                    logOutput.update { it + "Failed to deliver when sending to $serial ${sendResult?.getErrorOrNull()}\n\n" }
                                     println("SENDER: delivery cancelled for ${sendResult?.getErrorOrNull()}")
                                     TransferStat(
                                         sender = true,
@@ -1893,12 +1896,12 @@ class HomeViewModel : ViewModel() {
                             }
                         }
 
-                        if (statsMap.containsKey(serial)) {
+                        /*if (statsMap.containsKey(serial)) {
                             statsMap[serial]!!.add(stat)
                         } else {
                             statsMap[serial] = mutableListOf(stat)
-                        }
-                    }
+                        }*/
+//                    }
 
                 }
             }
