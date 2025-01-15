@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
 }
 
 def sdkToken() {
@@ -16,12 +17,12 @@ def appId() {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.gotenna.app"
         minSdk 26
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -48,15 +49,12 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
         freeCompilerArgs += "-opt-in=kotlin.time.ExperimentalTime"
     }
     buildFeatures {
         dataBinding true
         compose true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion "1.3.0"
     }
 }
 

@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
+import com.gotenna.radio.sdk.common.configuration.GTFrequencyChannel
 
 @Composable
 fun AdvancedFrequencyDialog(
@@ -123,8 +123,8 @@ fun AdvancedFrequencyDialog(
             TextButton(
                 onClick = {
                     val channels = listOf(
-                        controlChannels.map { GTFrequencyChannel(it.toDouble(), true, true) },
-                        dataChannels.map { GTFrequencyChannel(it.toDouble(), false, true) }
+                        controlChannels.map { GTFrequencyChannel(it.toDouble(), true) },
+                        dataChannels.map { GTFrequencyChannel(it.toDouble(), false) }
                     ).flatten()
                     onConfirmation(channels)
                 }

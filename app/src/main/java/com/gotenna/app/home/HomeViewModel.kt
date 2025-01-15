@@ -14,36 +14,36 @@ import com.gotenna.app.util.isScannedOrDisconnected
 import com.gotenna.app.util.replaceItem
 import com.gotenna.app.util.toListItems
 import com.gotenna.app.util.toMutableStateFlow
-import com.gotenna.common.models.CommandMetaData
-import com.gotenna.common.models.Coordinate
-import com.gotenna.common.models.EncryptionParameters
-import com.gotenna.common.models.FrequencyBandwidth
-import com.gotenna.common.models.GMGroupMember
-import com.gotenna.common.models.GTMessagePriority
-import com.gotenna.common.models.GTMessageType
-import com.gotenna.common.models.GotennaHeaderWrapper
-import com.gotenna.common.models.GripResult
-import com.gotenna.common.models.MapObject
-import com.gotenna.common.models.MessageTypeWrapper
-import com.gotenna.common.models.PowerLevel
-import com.gotenna.common.models.SendToNetwork
 import com.gotenna.radio.sdk.GotennaClient
+import com.gotenna.radio.sdk.common.configuration.GTBandwidth
+import com.gotenna.radio.sdk.common.configuration.GTFirmwareVersion
+import com.gotenna.radio.sdk.common.configuration.GTFrequencyChannel
+import com.gotenna.radio.sdk.common.configuration.GTOperationMode
+import com.gotenna.radio.sdk.common.configuration.GTPowerLevel
+import com.gotenna.radio.sdk.common.configuration.GidType
+import com.gotenna.radio.sdk.common.models.CommandMetaData
+import com.gotenna.radio.sdk.common.models.ConnectionType
+import com.gotenna.radio.sdk.common.models.Coordinate
 import com.gotenna.radio.sdk.common.models.DeliveryResult
-import com.gotenna.radio.sdk.common.models.SdkError
-import com.gotenna.radio.sdk.common.models.radio.ConnectionType
-import com.gotenna.radio.sdk.common.models.radio.GidType
-import com.gotenna.radio.sdk.common.models.radio.RadioModel
-import com.gotenna.radio.sdk.common.models.radio.SendToRadio
-import com.gotenna.radio.sdk.common.results.RadioResult
-import com.gotenna.radio.sdk.common.results.executedOrNull
-import com.gotenna.radio.sdk.common.results.getErrorOrNull
-import com.gotenna.radio.sdk.common.results.isSuccess
-import com.gotenna.radio.sdk.common.utils.GIDUtils
-import com.gotenna.radio.sdk.legacy.sdk.firmware.GTFirmwareVersion
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
-import com.gotenna.radio.sdk.legacy.sdk.session.properties.Properties
+import com.gotenna.radio.sdk.common.models.EncryptionParameters
+import com.gotenna.radio.sdk.common.models.FrequencyBandwidth
+import com.gotenna.radio.sdk.common.models.GMGroupMember
+import com.gotenna.radio.sdk.common.models.GTMessagePriority
+import com.gotenna.radio.sdk.common.models.GTMessageType
+import com.gotenna.radio.sdk.common.models.GotennaHeaderWrapper
+import com.gotenna.radio.sdk.common.models.GripResult
+import com.gotenna.radio.sdk.common.models.MapObject
+import com.gotenna.radio.sdk.common.models.MessageTypeWrapper
+import com.gotenna.radio.sdk.common.models.PowerLevel
+import com.gotenna.radio.sdk.common.models.RadioModel
+import com.gotenna.radio.sdk.common.models.SendToNetwork
+import com.gotenna.radio.sdk.common.models.SendToRadio
+import com.gotenna.radio.sdk.utils.RadioResult
+import com.gotenna.radio.sdk.utils.SdkError
+import com.gotenna.radio.sdk.utils.executedOrNull
+import com.gotenna.radio.sdk.utils.generateRandomizedPersonalGID
+import com.gotenna.radio.sdk.utils.getErrorOrNull
+import com.gotenna.radio.sdk.utils.isSuccess
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -147,7 +147,7 @@ class HomeViewModel : ViewModel() {
                 if (radios.isNotEmpty()) {
                     radios.forEach { radioModel ->
                         launch {
-                            radioModel.receive.collect { command ->
+                            radioModel.radioEvents.collect { command ->
                                 when (val executed = command.executedOrNull()) {
                                 is SendToNetwork.GripFile -> {
                                     when (val gripResult = executed.gripResult) {
@@ -285,6 +285,8 @@ class HomeViewModel : ViewModel() {
                                             statsMap[gripResult.originGid.toString()] =
                                                 mutableListOf(transferStat)
                                         }
+                                    } else {
+
                                     }
                                 }
 
@@ -307,6 +309,8 @@ class HomeViewModel : ViewModel() {
                                         statsMap["untracked"] = mutableListOf(transferStat)
                                     }
                                 }
+
+                                else -> {}
                             }
                         }
                     // For each connected radio observe their connection state.
@@ -555,7 +559,7 @@ class HomeViewModel : ViewModel() {
         logOutput.update { it + output }
     }
     
-    fun setOperationMode(mode: Properties.GTOperationMode) = viewModelScope.launch(Dispatchers.IO) {
+    fun setOperationMode(mode: GTOperationMode) = viewModelScope.launch(Dispatchers.IO) {
         val result = selectedRadio.value?.setOperationMode(mode)
         val output = if (result?.isSuccess() == true) {
             "Success set operation mode to $mode returned data is ${result.executedOrNull()}\n\n"
@@ -639,7 +643,7 @@ class HomeViewModel : ViewModel() {
             accuracy = 11,
             creationTime = 1718745135755,
             messageId = 0,
-            commandMetaData = CommandMetaData(messageType=GTMessageType.BROADCAST, destinationGid=0, isPeriodic=false, priority=GTMessagePriority.NORMAL, senderGid=904610228241489),
+            commandMetaData = CommandMetaData(messageType= GTMessageType.BROADCAST, destinationGid=0, isPeriodic=false, priority=GTMessagePriority.NORMAL, senderGid=904610228241489),
             commandHeader = GotennaHeaderWrapper(timeStamp=1718745135761, messageTypeWrapper= MessageTypeWrapper.LOCATION, appCode=0, senderGid=904610228241489, senderUUID="ANDROID-2440142b8ac6d5d7", senderCallsign="JONAS", encryptionParameters=null),
         )
 //            val byteData = Integer.valueOf(data.bytes.copyOfRange(3, 4).toHexString(), 16)
@@ -838,7 +842,7 @@ class HomeViewModel : ViewModel() {
     fun sendGroup(privateMessage: Boolean, gidNumber: String = "0") = viewModelScope.launch(Dispatchers.IO) {
         val result = selectedRadio.value?.send(
             SendToNetwork.Group(
-                groupGid = GIDUtils.generateRandomizedPersonalGID(),
+                groupGid = generateRandomizedPersonalGID(),
                 title = "test group",
                 members = listOf(
                     GMGroupMember(uid = UUID.randomUUID().toString(), callSign = "test1"),
@@ -1688,7 +1692,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun sendGroupInvitation(destinationGid: Long) = viewModelScope.launch(Dispatchers.IO)  {
-        groupGid = GIDUtils.generateRandomizedPersonalGID()
+        groupGid = generateRandomizedPersonalGID()
         setGroupGid(groupGid)
         val result = selectedRadio.value?.send(
             SendToNetwork.Group(
