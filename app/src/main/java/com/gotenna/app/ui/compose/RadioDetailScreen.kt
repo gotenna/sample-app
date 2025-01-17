@@ -5,7 +5,13 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.view.WindowManager
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
@@ -27,19 +33,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.gotenna.app.R
-import com.gotenna.app.home.*
+import com.gotenna.app.home.HomeViewModel
+import com.gotenna.app.home.getChannelData
+import com.gotenna.app.home.scanChannels
+import com.gotenna.app.home.sendDnop
+import com.gotenna.app.home.sendRelayHealthCheck
 import com.gotenna.app.ui.SimpleTopAppBar
 import com.gotenna.app.ui.theme.Black
 import com.gotenna.app.ui.theme.Gray
 import com.gotenna.app.ui.theme.ScreenBackground
-import com.gotenna.radio.sdk.common.models.radio.GidType
-import com.gotenna.radio.sdk.common.models.radio.RadioModel
-import com.gotenna.common.models.SendToNetwork
-import com.gotenna.radio.sdk.legacy.sdk.firmware.GTFirmwareVersion
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
-import com.gotenna.radio.sdk.legacy.sdk.session.properties.Properties
+import com.gotenna.radio.sdk.common.configuration.GTBandwidth
+import com.gotenna.radio.sdk.common.configuration.GTFirmwareVersion
+import com.gotenna.radio.sdk.common.configuration.GTFrequencyChannel
+import com.gotenna.radio.sdk.common.configuration.GTOperationMode
+import com.gotenna.radio.sdk.common.configuration.GTPowerLevel
+import com.gotenna.radio.sdk.common.configuration.GidType
+import com.gotenna.radio.sdk.common.models.RadioModel
+import com.gotenna.radio.sdk.common.models.SendToNetwork
 import java.io.File
 import java.io.FileOutputStream
 
@@ -233,7 +243,7 @@ fun DetailScreen(
     onGetPowerAndBandwidth: () -> Unit,
     onSetFrequencyChannels: (List<GTFrequencyChannel>) -> Unit,
     onGetFrequencyChannels: () -> Unit,
-    onSetOperationMode: (Properties.GTOperationMode) -> Unit,
+    onSetOperationMode: (GTOperationMode) -> Unit,
     onGetDeviceInfo: () -> Unit,
     onGetMcuArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,

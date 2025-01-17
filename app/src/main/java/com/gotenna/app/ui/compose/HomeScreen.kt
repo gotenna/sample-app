@@ -4,7 +4,15 @@ package com.gotenna.app.ui.compose
 
 import android.Manifest
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Button
@@ -20,12 +28,26 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.gotenna.app.R
 import com.gotenna.app.home.HomeState
 import com.gotenna.app.model.RadioListItem
-import com.gotenna.app.ui.*
-import com.gotenna.app.ui.theme.*
+import com.gotenna.app.ui.ButtonToggleGroup
+import com.gotenna.app.ui.ConnectedIndicator
+import com.gotenna.app.ui.HorizontalDivider
+import com.gotenna.app.ui.SimpleCheckbox
+import com.gotenna.app.ui.SimpleText
+import com.gotenna.app.ui.SimpleTopAppBar
+import com.gotenna.app.ui.WideButton
+import com.gotenna.app.ui.theme.Black
+import com.gotenna.app.ui.theme.Gray
+import com.gotenna.app.ui.theme.Green
+import com.gotenna.app.ui.theme.HighlightedBackground
+import com.gotenna.app.ui.theme.ListItemBackground
+import com.gotenna.app.ui.theme.Normal
+import com.gotenna.app.ui.theme.NotSelectedBackground
+import com.gotenna.app.ui.theme.ScreenBackground
+import com.gotenna.app.ui.theme.Small
+import com.gotenna.app.ui.theme.White
 import com.gotenna.app.util.clickableWithRipple
 import com.gotenna.app.util.isConnected
-import com.gotenna.radio.sdk.common.models.radio.ConnectionType
-import com.gotenna.radio.sdk.common.models.radio.RadioModel
+import com.gotenna.radio.sdk.common.models.ConnectionType
 
 @Preview
 @Composable

@@ -2,6 +2,9 @@ package com.gotenna.app
 
 import android.app.Application
 import com.gotenna.radio.sdk.GotennaClient
+import com.gotenna.radio.sdk.common.models.EncryptionParameters
+import com.gotenna.radio.sdk.common.models.GotennaHeaderWrapper
+import com.gotenna.radio.sdk.initialize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,6 +32,12 @@ class MainApplication : Application() {
     }
 
     private fun initGotennaClient() = backgroundScope.launch {
-        GotennaClient.initialize(context = applicationContext, sdkToken = SDK_TOKEN, appId = APP_ID, preProcessAction = null, postProcessAction = null)
+        GotennaClient.initialize(
+            context = applicationContext,
+            sdkToken = SDK_TOKEN,
+            appId = APP_ID,
+            preProcessAction = null,
+            postProcessAction = null
+        )
     }
 }

@@ -5,7 +5,17 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
@@ -26,16 +36,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.gotenna.app.MainApplication
 import com.gotenna.app.R
-import com.gotenna.app.ui.*
-import com.gotenna.app.ui.theme.*
-import com.gotenna.radio.sdk.common.models.radio.GidType
-import com.gotenna.radio.sdk.common.models.radio.RadioModel
-import com.gotenna.radio.sdk.legacy.sdk.firmware.GTFirmwareVersion
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTBandwidth
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTFrequencyChannel
-import com.gotenna.radio.sdk.legacy.sdk.frequency.GTPowerLevel
-import com.gotenna.radio.sdk.common.utils.GIDUtils
-import com.gotenna.radio.sdk.legacy.sdk.session.properties.Properties
+import com.gotenna.app.ui.BoldText
+import com.gotenna.app.ui.DefaultWideButton
+import com.gotenna.app.ui.SimpleTextField
+import com.gotenna.app.ui.VerticalDivider
+import com.gotenna.app.ui.showToast
+import com.gotenna.app.ui.theme.DialogBackground
+import com.gotenna.app.ui.theme.Gray
+import com.gotenna.app.ui.theme.Green
+import com.gotenna.app.ui.theme.Medium
+import com.gotenna.app.ui.theme.Small
+import com.gotenna.app.ui.theme.White
+import com.gotenna.radio.sdk.common.configuration.GTBandwidth
+import com.gotenna.radio.sdk.common.configuration.GTFirmwareVersion
+import com.gotenna.radio.sdk.common.configuration.GTFrequencyChannel
+import com.gotenna.radio.sdk.common.configuration.GTOperationMode
+import com.gotenna.radio.sdk.common.configuration.GTPowerLevel
+import com.gotenna.radio.sdk.common.configuration.GidType
+import com.gotenna.radio.sdk.common.models.RadioModel
+import com.gotenna.radio.sdk.utils.generateSerialGid
+import com.gotenna.radio.sdk.utils.isRandomizedGid
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.io.path.outputStream
@@ -132,7 +152,7 @@ fun RadioActions(
     onSetFrequencyChannels: (List<GTFrequencyChannel>) -> Unit,
     onSetFrequencyChannelsAdvanced: () -> Unit,
     onGetFrequencyChannels: () -> Unit,
-    onSetOperationMode: (Properties.GTOperationMode) -> Unit,
+    onSetOperationMode: (GTOperationMode) -> Unit,
     onGetDeviceInfo: () -> Unit,
     onGetMCUArch: () -> Unit,
     onInstallFile: (ByteArray, GTFirmwareVersion) -> Unit,
@@ -151,7 +171,7 @@ fun RadioActions(
     showReceiverStats: () -> Unit
 ) {
     val context = LocalContext.current
-    val gid: Long = GIDUtils.generateSerialGid(currentRadioSerial)
+    val gid: Long = generateSerialGid(currentRadioSerial)
     var gidNumber by remember { mutableStateOf("0") }
     var isShowGidAcquiringDialog by remember { mutableStateOf(false) }
     var pickedFirmwareFile by remember { mutableStateOf<Uri?>(null) }
@@ -722,7 +742,7 @@ fun RadioActions(
 
         item {
             DefaultWideButton(text = "Set Op Mode to RELAY") {
-                onSetOperationMode(Properties.GTOperationMode.RELAY)
+                onSetOperationMode(GTOperationMode.RELAY)
             }
         }
 
@@ -803,7 +823,7 @@ fun GidAcquiringDialog(dismissAction: () -> Unit, confirmClickAction: (String) -
                             .fillMaxHeight()
                             .weight(1f)
                             .clickable {
-                                if (!GIDUtils.isRandomizedGid(gidString.toLong())) {
+                                if (!isRandomizedGid(gidString.toLong())) {
                                     showToast(context, R.string.invalid_gid_warning)
                                 } else {
                                     confirmClickAction(gidString)

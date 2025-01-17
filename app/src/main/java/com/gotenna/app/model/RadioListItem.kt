@@ -1,6 +1,6 @@
 package com.gotenna.app.model
 
-import com.gotenna.radio.sdk.common.models.radio.RadioModel
+import com.gotenna.radio.sdk.common.models.RadioModel
 
 /**
  * For the sample app UI.

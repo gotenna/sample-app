@@ -19,7 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.gotenna.app.home.HomeViewModel
 import com.gotenna.radio.sdk.GotennaClient
-import com.gotenna.radio.sdk.common.models.radio.ConnectionType
+import com.gotenna.radio.sdk.common.models.ConnectionType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
