@@ -55,3 +55,11 @@ Take the radio from the scan list and call `.connect()` on it.
 val result = radio.connect()
 ```
 
+## Communication Suggestions
+
+What we normally do is this:
+- Node A sends everyone on the mesh network its `LocationModel` as a broadcast message every minute.
+- Node B receives `LocationModel` from A and other nodes.
+- Node B stores (app logic) the GID of each node in a contact list.
+- Node B uses the contact list to get the GID of the node they want to contact.
+
